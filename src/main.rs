@@ -2,7 +2,6 @@ mod api;
 pub mod errors;
 mod state;
 
-use actix::Actor;
 use actix_web::{
     middleware::{normalize::TrailingSlash, Logger, NormalizePath},
     web, App, HttpServer,
@@ -12,13 +11,6 @@ use simplelog::{ColorChoice, Config, TermLogger, TerminalMode};
 
 use crate::state::State;
 
-enum Extras {
-    AuthGet,
-    AuthPost(String),
-    Nothing,
-}
-
-
 #[actix_web::main]
 pub async fn main() -> std::io::Result<()> {
     TermLogger::init(
@@ -26,13 +18,14 @@ pub async fn main() -> std::io::Result<()> {
         Config::default(),
         TerminalMode::Mixed,
         ColorChoice::Auto,
-    ).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e) )?;
+    )
+    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
 
     info!("Starting up server");
+
     let state =
         State::new().map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
-
-    let state = state.start();
+    let state = web::Data::new(state);
 
     HttpServer::new(move || {
         App::new()

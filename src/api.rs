@@ -1,13 +1,17 @@
-use actix::Addr;
 use actix_web::{web, HttpResponse};
-use oxide_auth_actix::{Authorize, OAuthOperation, OAuthRequest, OAuthResponse, WebError};
+use oxide_auth::endpoint::AuthorizationFlow;
+use oxide_auth_actix::{OAuthRequest, OAuthResponse, WebError};
 
-use crate::{errors::ServiceError, state::State, Extras};
+use crate::{errors::ServiceError, state::State};
 
 pub async fn get_authorize(
-    (req, state): (OAuthRequest, web::Data<Addr<State>>),
+    (req, state): (OAuthRequest, web::Data<State>),
 ) -> Result<OAuthResponse, WebError> {
-    state.send(Authorize(req).wrap(Extras::AuthGet)).await?
+    let endpoint = state.endpoint();
+
+    AuthorizationFlow::prepare(endpoint)?
+        .execute(req)
+        .map_err(WebError::from)
 }
 
 pub async fn post_authorize() -> Result<HttpResponse, ServiceError> {
@@ -25,17 +29,14 @@ pub async fn refresh() -> Result<HttpResponse, ServiceError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix::Actor;
     use actix_web::{test, web, App};
 
     #[actix_rt::test]
     async fn test_get_authorize() {
         let state = State::new().unwrap();
-
-        let state = state.start();
         let mut app = test::init_service(
             App::new()
-                .data(state.clone())
+                .data(state)
                 .route("/authorize", web::get().to(get_authorize)),
         )
         .await;

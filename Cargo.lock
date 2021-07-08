@@ -1250,6 +1250,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "oxide-auth-async"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "03c2ae7df8070b0a02bf81d67355af4ab4ae7ad5efc376d322f0239b75701ed4"
+dependencies = [
+ "async-trait",
+ "base64 0.12.3",
+ "chrono",
+ "oxide-auth",
+ "url",
+]
+
+[[package]]
 name = "parking_lot"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1641,13 +1654,13 @@ dependencies = [
 name = "shibboleth-oauth2-forward"
 version = "0.1.0"
 dependencies = [
- "actix",
  "actix-rt 2.2.0",
  "actix-web",
  "actix-web-actors",
  "log",
  "oxide-auth",
  "oxide-auth-actix",
+ "oxide-auth-async",
  "simplelog",
  "thiserror",
  "url",
