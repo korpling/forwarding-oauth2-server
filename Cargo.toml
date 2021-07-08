@@ -9,3 +9,6 @@ simplelog = "0.10"
 oxide-auth = "0.5"
 actix-web = "3"
 thiserror = "1"
+
+[dev-dependencies]
+actix-rt = "2"

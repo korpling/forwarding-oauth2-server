@@ -1,7 +1,7 @@
 # OAuth2 server for wrapping Shibboleth IdPs
 
 This is a server that creates an OAuth2 Server (identity provider).
-It assumes it runs behind as protected resource (e.g. by securing it with `  AuthType shibboleth` in an Apache 2 server). 
+It assumes it runs behind as protected resource (e.g. by securing it with `AuthType shibboleth` in an Apache 2 server). 
 Shibboleth/SAML meta data fields that are passed through as environment variables can be mapped to JWT token attributes.
 
 **This is currently a prototype and production ready!!!**
