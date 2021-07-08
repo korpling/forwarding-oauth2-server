@@ -6,7 +6,7 @@ use actix_web::{
     middleware::{normalize::TrailingSlash, Logger, NormalizePath},
     web, App, HttpServer,
 };
-use log::{info, LevelFilter};
+use log::{LevelFilter};
 use simplelog::{ColorChoice, Config, TermLogger, TerminalMode};
 
 use crate::state::State;
@@ -20,8 +20,6 @@ pub async fn main() -> std::io::Result<()> {
         ColorChoice::Auto,
     )
     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-
-    info!("Starting up server");
 
     let state =
         State::new().map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;

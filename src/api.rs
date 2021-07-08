@@ -1,5 +1,8 @@
 use actix_web::{web, HttpResponse};
-use oxide_auth::endpoint::AuthorizationFlow;
+use oxide_auth::{
+    endpoint::{AuthorizationFlow, OwnerConsent, Solicitation},
+    frontends::simple::endpoint::FnSolicitor,
+};
 use oxide_auth_actix::{OAuthRequest, OAuthResponse, WebError};
 
 use crate::{errors::ServiceError, state::State};
@@ -7,7 +10,12 @@ use crate::{errors::ServiceError, state::State};
 pub async fn get_authorize(
     (req, state): (OAuthRequest, web::Data<State>),
 ) -> Result<OAuthResponse, WebError> {
-    let endpoint = state.endpoint();
+    let endpoint =
+        state
+            .endpoint()
+            .with_solicitor(FnSolicitor(move |_: &mut _, _grant: Solicitation<'_>| {
+                OwnerConsent::Denied
+            }));
 
     AuthorizationFlow::prepare(endpoint)?
         .execute(req)
