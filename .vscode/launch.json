@@ -1,0 +1,45 @@
+{
+    // Verwendet IntelliSense zum Ermitteln möglicher Attribute.
+    // Zeigen Sie auf vorhandene Attribute, um die zugehörigen Beschreibungen anzuzeigen.
+    // Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'shibboleth-oauth2-forward'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=shibboleth-oauth2-forward",
+                    "--package=shibboleth-oauth2-forward"
+                ],
+                "filter": {
+                    "name": "shibboleth-oauth2-forward",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'shibboleth-oauth2-forward'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=shibboleth-oauth2-forward",
+                    "--package=shibboleth-oauth2-forward"
+                ],
+                "filter": {
+                    "name": "shibboleth-oauth2-forward",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
