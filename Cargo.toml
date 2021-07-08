@@ -16,3 +16,4 @@ url = "2"
 
 [dev-dependencies]
 actix-rt = "2"
+serial_test = "0.5"
