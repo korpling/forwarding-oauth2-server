@@ -1,0 +1,8 @@
+[package]
+name = "shibboleth-oauth2-forward"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+oxide-auth = "0.5"
+actix-web = "3"
