@@ -1,10 +1,13 @@
-use actix_web::{HttpResponse, web};
-use oxide_auth_actix::OAuthRequest;
+use actix::Addr;
+use actix_web::{web, HttpResponse};
+use oxide_auth_actix::{Authorize, OAuthOperation, OAuthRequest, OAuthResponse, WebError};
 
-use crate::{errors::ServiceError, state::State};
+use crate::{errors::ServiceError, state::State, Extras};
 
-pub async fn get_authorize((req, state): (OAuthRequest, web::Data<State>)) -> Result<HttpResponse, ServiceError> {
-    todo!()
+pub async fn get_authorize(
+    (req, state): (OAuthRequest, web::Data<Addr<State>>),
+) -> Result<OAuthResponse, WebError> {
+    state.send(Authorize(req).wrap(Extras::AuthGet)).await?
 }
 
 pub async fn post_authorize() -> Result<HttpResponse, ServiceError> {

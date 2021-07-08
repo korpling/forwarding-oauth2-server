@@ -2,6 +2,7 @@ mod api;
 pub mod errors;
 mod state;
 
+use actix::Actor;
 use actix_web::{
     middleware::{normalize::TrailingSlash, Logger, NormalizePath},
     web, App, HttpServer,
@@ -10,6 +11,13 @@ use log::{info, LevelFilter};
 use simplelog::{ColorChoice, Config, TermLogger, TerminalMode};
 
 use crate::state::State;
+
+enum Extras {
+    AuthGet,
+    AuthPost(String),
+    Nothing,
+}
+
 
 #[actix_web::main]
 pub async fn main() -> std::io::Result<()> {
@@ -24,7 +32,7 @@ pub async fn main() -> std::io::Result<()> {
     let state =
         State::new().map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 
-    let state = web::Data::new(state);
+    let state = state.start();
 
     HttpServer::new(move || {
         App::new()

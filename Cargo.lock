@@ -1641,6 +1641,7 @@ dependencies = [
 name = "shibboleth-oauth2-forward"
 version = "0.1.0"
 dependencies = [
+ "actix",
  "actix-rt 2.2.0",
  "actix-web",
  "actix-web-actors",

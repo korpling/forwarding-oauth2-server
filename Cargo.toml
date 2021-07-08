@@ -4,6 +4,7 @@ name = "shibboleth-oauth2-forward"
 version = "0.1.0"
 
 [dependencies]
+actix = "0.10"
 actix-web = "3"
 actix-web-actors = "3"
 log = "0.4"
