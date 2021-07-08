@@ -25,21 +25,30 @@ pub async fn refresh() -> Result<HttpResponse, ServiceError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use actix::Actor;
     use actix_web::{test, web, App};
 
     #[actix_rt::test]
     async fn test_get_authorize() {
-        let mut app =
-            test::init_service(App::new().route("/authorize", web::get().to(get_authorize))).await;
+        let state = State::new().unwrap();
 
-        let req = test::TestRequest::with_header("content-type", "text/plain").to_request();
+        let state = state.start();
+        let mut app = test::init_service(
+            App::new()
+                .data(state.clone())
+                .route("/authorize", web::get().to(get_authorize)),
+        )
+        .await;
+
+        let req = test::TestRequest::with_uri("/authorize?response_type=code&client_id=ANNIS&redirect_uri=http%3A%2F%2Flocalhost%3A5712&scope=default-scope&state=23235253").to_request();
         let resp = test::call_service(&mut app, req).await;
 
-        assert!(resp.status().is_success());
-        let body = resp.response().body();
-        match body {
-            actix_web::dev::ResponseBody::Body(_) => todo!(),
-            actix_web::dev::ResponseBody::Other(_) => todo!(),
-        }
+        assert_eq!(resp.status(), 302);
+        assert!(resp.headers().get("location").is_some());
+        let location = resp.headers().get("location").unwrap().to_str().unwrap();
+        assert_eq!(
+            location,
+            "http://localhost:5712/?state=23235253&error=access_denied"
+        );
     }
 }
