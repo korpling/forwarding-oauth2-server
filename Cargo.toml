@@ -1,14 +1,17 @@
 [package]
+edition = "2018"
 name = "shibboleth-oauth2-forward"
 version = "0.1.0"
-edition = "2018"
 
 [dependencies]
-log = "0.4"
-simplelog = "0.10"
-oxide-auth = "0.5"
 actix-web = "3"
+actix-web-actors = "3"
+log = "0.4"
+oxide-auth = "0.5"
+oxide-auth-actix = "0.1"
+simplelog = "0.10"
 thiserror = "1"
+url = "2"
 
 [dev-dependencies]
 actix-rt = "2"

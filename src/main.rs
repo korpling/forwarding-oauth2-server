@@ -1,5 +1,6 @@
 mod api;
-mod errors;
+pub mod errors;
+mod state;
 
 use actix_web::{
     middleware::{normalize::TrailingSlash, Logger, NormalizePath},
@@ -8,6 +9,8 @@ use actix_web::{
 use log::{info, LevelFilter};
 use simplelog::{ColorChoice, Config, TermLogger, TerminalMode};
 
+use crate::state::State;
+
 #[actix_web::main]
 pub async fn main() -> std::io::Result<()> {
     TermLogger::init(
@@ -15,13 +18,17 @@ pub async fn main() -> std::io::Result<()> {
         Config::default(),
         TerminalMode::Mixed,
         ColorChoice::Auto,
-    )
-    .unwrap();
+    ).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e) )?;
 
     info!("Starting up server");
+    let state =
+        State::new().map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+
+    let state = web::Data::new(state);
 
     HttpServer::new(move || {
         App::new()
+            .data(state.clone())
             .wrap(NormalizePath::new(TrailingSlash::Trim))
             .wrap(Logger::default())
             .service(
@@ -31,7 +38,6 @@ pub async fn main() -> std::io::Result<()> {
             )
             .route("/token", web::post().to(api::token))
             .route("/refresh", web::post().to(api::refresh))
-            .route("/", web::get().to(api::index))
     })
     .bind("localhost:8020")
     .expect("Failed to bind to socket")
