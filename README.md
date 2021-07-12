@@ -5,8 +5,14 @@
 This is a server that creates an OAuth2 Server (identity provider).
 It assumes it runs behind as protected resource (e.g. by securing it with `AuthType shibboleth` in an Apache 2 server). 
 Shibboleth/SAML meta data fields that are passed through as HTTP headers (like `X-Remote-User`) variables can be mapped to JWT token attributes.
-The server is implemented in Rust, using the [oxid-auth](https://github.com/HeroicKatora/oxide-auth/) library.
 
+## TODOs
+
+- [X] Basic implementation of the OAuth2-Workflow using the [oxid-auth](https://github.com/HeroicKatora/oxide-auth/) library
+- [ ] Support configuration files for the various settings including which JWT token signing algorithm to use
+- [ ] Allow to define mappings between HTTP headers and generated JWT tokens
+- [ ] Document integration with the Apache2 Shibboleth module and how to start this service
+- [ ] Add release binaries for Linux
 
 ## Background
 
