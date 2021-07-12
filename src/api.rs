@@ -21,8 +21,7 @@ pub async fn authorize(
                         }
                     }
                 }
-                OwnerConsent::Authorized("tk".to_string())
-//                OwnerConsent::Denied
+                OwnerConsent::Denied
             }));
 
     AuthorizationFlow::prepare(endpoint)?
@@ -54,10 +53,17 @@ mod tests {
 
     use super::*;
     use actix_web::{
-        dev::{Body, ResponseBody},
-        test, web, App,
+        test::{self, read_body},
+        web, App,
     };
+    use serde::Serialize;
     use url::Url;
+
+    #[derive(Serialize)]
+    struct TokenParams {
+        grant_type: String,
+        code: String,
+    }
 
     #[actix_rt::test]
     async fn test_retrieve_token() {
@@ -87,29 +93,23 @@ mod tests {
             .collect();
 
         let code = params.get("code").unwrap();
+        dbg!(&code);
 
         // Use the code to request a token
+        let params = TokenParams {
+            grant_type: "authorization_code".to_string(),
+            code: code.to_string(),
+        };
         let req = test::TestRequest::post()
-            .uri(&format!(
-                "/token?grant_type=authorization_code&code={}",
-                code
-            ))
+            .uri("/token")
+            .set_form(&params)
             .to_request();
-        let mut resp = test::call_service(&mut app, req).await;
+        let resp = test::call_service(&mut app, req).await;
 
         assert_eq!(resp.status(), 200);
 
-        if let ResponseBody::Body(body) = resp.take_body() {
-            match body {
-                Body::Bytes(content) => {
-                    // TODO: Decode the content and check its a valid JWT token
-                    dbg!(content);
-                }
-                _ => panic!("Invalid response body content type"),
-            }
-        } else {
-            panic!("Invalid response body type, should have been ResponseBody::Body")
-        }
+        let body = read_body(resp).await;
+        dbg!(body);
     }
 
     #[actix_rt::test]

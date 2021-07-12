@@ -16,3 +16,4 @@ url = "2"
 
 [dev-dependencies]
 actix-rt = "2"
+serde = {version="1", features = ["derive"]}

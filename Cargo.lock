@@ -1661,6 +1661,7 @@ dependencies = [
  "oxide-auth",
  "oxide-auth-actix",
  "oxide-auth-async",
+ "serde",
  "simplelog",
  "thiserror",
  "url",
