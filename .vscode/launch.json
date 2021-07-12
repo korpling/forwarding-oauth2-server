@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'shibboleth-oauth2-forward'",
+            "name": "Debug executable 'shibboleth-oauth2-forwarding'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=shibboleth-oauth2-forward",
-                    "--package=shibboleth-oauth2-forward"
+                    "--bin=shibboleth-oauth2-forwarding",
+                    "--package=shibboleth-oauth2-forwarding"
                 ],
                 "filter": {
-                    "name": "shibboleth-oauth2-forward",
+                    "name": "shibboleth-oauth2-forwarding",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'shibboleth-oauth2-forward'",
+            "name": "Debug unit tests in executable 'shibboleth-oauth2-forwarding'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=shibboleth-oauth2-forward",
-                    "--package=shibboleth-oauth2-forward"
+                    "--bin=shibboleth-oauth2-forwarding",
+                    "--package=shibboleth-oauth2-forwarding"
                 ],
                 "filter": {
-                    "name": "shibboleth-oauth2-forward",
+                    "name": "shibboleth-oauth2-forwarding",
                     "kind": "bin"
                 }
             },

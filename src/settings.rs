@@ -1,14 +1,14 @@
-use jsonwebtoken::DecodingKey;
+use jsonwebtoken::EncodingKey;
 use serde::{Deserialize, Serialize};
 
 use crate::errors::StartupError;
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Logging {
     pub debug: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Bind {
     pub port: i16,
     pub host: String,
@@ -23,21 +23,21 @@ impl Default for Bind {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
 pub enum JWTVerification {
     HS256 { secret: String },
-    RS256 { public_key: String },
+    RS256 { private_key: String },
 }
 
 impl JWTVerification {
-    pub fn create_decoding_key(&self) -> Result<DecodingKey, StartupError> {
+    pub fn create_encoding_key(&self) -> Result<EncodingKey, StartupError> {
         let key = match &self {
             JWTVerification::HS256 { secret } => {
-                jsonwebtoken::DecodingKey::from_secret(secret.as_bytes())
+                jsonwebtoken::EncodingKey::from_secret(secret.as_bytes())
             }
-            JWTVerification::RS256 { public_key } => {
-                jsonwebtoken::DecodingKey::from_rsa_pem(public_key.as_bytes())?
+            JWTVerification::RS256 { private_key, .. } => {
+                jsonwebtoken::EncodingKey::from_rsa_pem(private_key.as_bytes())?
             }
         };
         Ok(key)
@@ -59,12 +59,12 @@ impl Default for JWTVerification {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Auth {
     pub token_verification: JWTVerification,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Client {
     pub id: String,
     pub redirect_uri: String,
@@ -79,7 +79,7 @@ impl Default for Client {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Settings {
     pub auth: Auth,
     pub logging: Logging,

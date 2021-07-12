@@ -1,5 +1,6 @@
 mod api;
 mod errors;
+mod jwt;
 mod settings;
 mod state;
 

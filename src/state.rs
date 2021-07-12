@@ -1,6 +1,7 @@
 use std::sync::Mutex;
 
 use crate::errors::StartupError;
+use crate::jwt::JWTIssuer;
 use crate::settings::Settings;
 use oxide_auth::frontends::simple::endpoint::{Generic, Vacant};
 use oxide_auth::primitives::prelude::*;
@@ -8,7 +9,7 @@ use oxide_auth::primitives::prelude::*;
 pub struct State {
     registrar: Mutex<ClientMap>,
     authorizer: Mutex<AuthMap<RandomGenerator>>,
-    issuer: Mutex<TokenMap<RandomGenerator>>,
+    issuer: Mutex<JWTIssuer>,
 }
 
 impl State {
@@ -32,7 +33,7 @@ impl State {
         .into_iter()
         .collect();
         let authorizer = AuthMap::new(RandomGenerator::new(16));
-        let issuer = TokenMap::new(RandomGenerator::new(16));
+        let issuer = JWTIssuer::new(settings.clone());
         let state = State {
             registrar: Mutex::new(registrar),
             issuer: Mutex::new(issuer),
