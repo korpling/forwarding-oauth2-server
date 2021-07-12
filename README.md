@@ -7,3 +7,5 @@ Shibboleth/SAML meta data fields that are passed through as HTTP headers (like `
 **This is currently a prototype and production ready!!!**
 
 The server is implemented in Rust, using the [oxid-auth](https://github.com/HeroicKatora/oxide-auth/) library.
+
+It will be used in as identity provider for the [ANNIS frontend](https://github.com/korpling/ANNIS) when an institutional Shibboleth identity provider (like the DFN AAI) should be used.

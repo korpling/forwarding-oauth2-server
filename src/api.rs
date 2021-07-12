@@ -101,7 +101,6 @@ mod tests {
                 .route("/authorize", web::get().to(authorize))
                 .route("/token", web::post().to(token))
                 .route("/refresh", web::post().to(refresh)),
-
         )
         .await;
 
@@ -122,7 +121,7 @@ mod tests {
             .collect();
 
         let code = params.get("code").unwrap();
-     
+
         // Use the code to request a token
         let params = TokenParams {
             grant_type: "authorization_code".to_string(),
