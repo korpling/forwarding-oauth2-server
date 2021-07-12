@@ -1,7 +1,10 @@
 [package]
 edition = "2018"
-name = "shibboleth-oauth2-forward"
+name = "shibboleth-oauth2-forwarding"
 version = "0.1.0"
+license = "Apache-2.0"
+repository = "https://github.com/korpling/shibboleth-oauth2-forwarding"
+authors = ["Thomas Krause"]
 
 [dependencies]
 actix-web = "3"
