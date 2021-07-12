@@ -1,6 +1,6 @@
 # OAuth2 server for wrapping Shibboleth IdPs
 
-**This is currently a prototype and production ready!!!**
+**This is currently a prototype and *not* production ready!!!**
 
 This is a server that creates an OAuth2 Server (identity provider).
 It assumes it runs behind as protected resource (e.g. by securing it with `AuthType shibboleth` in an Apache 2 server). 
