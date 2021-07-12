@@ -7,7 +7,7 @@ use oxide_auth_actix::{OAuthRequest, OAuthResponse, WebError};
 
 use crate::{errors::ServiceError, state::State};
 
-pub async fn get_authorize(
+pub async fn authorize(
     (auth_request, http_req, state): (OAuthRequest, HttpRequest, web::Data<State>),
 ) -> Result<OAuthResponse, WebError> {
     let endpoint =
@@ -29,10 +29,6 @@ pub async fn get_authorize(
         .map_err(WebError::from)
 }
 
-pub async fn post_authorize() -> Result<HttpResponse, ServiceError> {
-    todo!()
-}
-
 pub async fn token() -> Result<HttpResponse, ServiceError> {
     todo!()
 }
@@ -47,12 +43,12 @@ mod tests {
     use actix_web::{test, web, App};
 
     #[actix_rt::test]
-    async fn test_get_authorize_noenv() {
+    async fn test_authorize_no_header() {
         let state = State::new().unwrap();
         let mut app = test::init_service(
             App::new()
                 .data(state)
-                .route("/authorize", web::get().to(get_authorize)),
+                .route("/authorize", web::get().to(authorize)),
         )
         .await;
 
@@ -74,11 +70,32 @@ mod tests {
         let mut app = test::init_service(
             App::new()
                 .data(state)
-                .route("/authorize", web::get().to(get_authorize)),
+                .route("/authorize", web::get().to(authorize)),
         )
         .await;
 
-        let req = test::TestRequest::with_uri(
+        let req = test::TestRequest::get().uri(
+            "/authorize?response_type=code&client_id=ANNIS&redirect_uri=http%3A%2F%2Flocalhost%3A5712&scope=default-scope&state=23235253")
+            .header("X-Remote-User", "testuser@example.com").to_request();
+        let resp = test::call_service(&mut app, req).await;
+
+        assert_eq!(resp.status(), 302);
+        assert!(resp.headers().get("location").is_some());
+        let location = resp.headers().get("location").unwrap().to_str().unwrap();
+        assert!(location.contains("code="));
+    }
+
+    #[actix_rt::test]
+    async fn test_post_authorize_remove_user_present() {
+        let state = State::new().unwrap();
+        let mut app = test::init_service(
+            App::new()
+                .data(state)
+                .route("/authorize", web::post().to(authorize)),
+        )
+        .await;
+
+        let req = test::TestRequest::post().uri(
             "/authorize?response_type=code&client_id=ANNIS&redirect_uri=http%3A%2F%2Flocalhost%3A5712&scope=default-scope&state=23235253")
             .header("X-Remote-User", "testuser@example.com").to_request();
         let resp = test::call_service(&mut app, req).await;

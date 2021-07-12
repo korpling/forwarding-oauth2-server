@@ -32,8 +32,8 @@ pub async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .service(
                 web::resource("/authorize")
-                    .route(web::get().to(api::get_authorize))
-                    .route(web::post().to(api::post_authorize)),
+                    .route(web::get().to(api::authorize))
+                    .route(web::post().to(api::authorize)),
             )
             .route("/token", web::post().to(api::token))
             .route("/refresh", web::post().to(api::refresh))
