@@ -1,3 +1,4 @@
+use crate::settings::Settings;
 
 use super::*;
 
@@ -45,7 +46,8 @@ struct RefreshTokenResult {
 
 #[actix_rt::test]
 async fn test_retrieve_token() {
-    let state = State::new().unwrap();
+    let settings = Settings::default();
+    let state = State::new(&settings).unwrap();
     let mut app = test::init_service(
         App::new()
             .data(state)
@@ -122,7 +124,8 @@ async fn test_retrieve_token() {
 
 #[actix_rt::test]
 async fn test_invalid_token_code() {
-    let state = State::new().unwrap();
+    let settings = Settings::default();
+    let state = State::new(&settings).unwrap();
     let mut app = test::init_service(
         App::new()
             .data(state)
@@ -156,7 +159,8 @@ async fn test_invalid_token_code() {
 
 #[actix_rt::test]
 async fn test_authorize_no_header() {
-    let state = State::new().unwrap();
+    let settings = Settings::default();
+    let state = State::new(&settings).unwrap();
     let mut app = test::init_service(
         App::new()
             .data(state)

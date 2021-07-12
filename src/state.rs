@@ -1,6 +1,7 @@
 use std::sync::Mutex;
 
 use crate::errors::StartupError;
+use crate::settings::Settings;
 use oxide_auth::frontends::simple::endpoint::{Generic, Vacant};
 use oxide_auth::primitives::prelude::*;
 
@@ -22,10 +23,10 @@ impl State {
         }
     }
 
-    pub fn new() -> Result<Self, StartupError> {
+    pub fn new(settings: &Settings) -> Result<Self, StartupError> {
         let registrar = vec![Client::public(
-            "ANNIS",
-            "http://localhost:5712".parse::<url::Url>()?.into(),
+            &settings.client.id,
+            settings.client.redirect_uri.parse::<url::Url>()?.into(),
             "default-scope".parse()?,
         )]
         .into_iter()

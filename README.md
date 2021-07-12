@@ -9,7 +9,8 @@ Shibboleth/SAML meta data fields that are passed through as HTTP headers (like `
 ## TODOs
 
 - [X] Basic implementation of the OAuth2-Workflow using the [oxide-auth](https://github.com/HeroicKatora/oxide-auth/) library
-- [ ] Support configuration files for the various settings including which JWT token signing algorithm to use
+- [X] Support configuration files for the various settings
+- [ ] Generate JWT tokens as bearer tokens
 - [ ] Allow to define mappings between HTTP headers and generated JWT tokens
 - [ ] Document integration with the Apache2 Shibboleth module and how to start this service
 - [ ] Add release binaries for Linux
