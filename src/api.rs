@@ -52,17 +52,25 @@ mod tests {
     use std::collections::HashMap;
 
     use super::*;
-    use actix_web::{
-        test::{self, read_body},
-        web, App,
-    };
-    use serde::Serialize;
+    use actix_web::{App, test::{self, read_body}, web::{self, Buf}};
+    use serde::{Serialize, Deserialize};
     use url::Url;
 
     #[derive(Serialize)]
     struct TokenParams {
         grant_type: String,
         code: String,
+        client_id: String,
+        redirect_uri: String,
+    }
+
+    #[derive(Deserialize)]
+    struct TokenResult {
+        access_token: String,
+        refresh_token: String,
+        token_type: String,
+        expires_in: i64,
+        scope: String,
     }
 
     #[actix_rt::test]
@@ -99,6 +107,8 @@ mod tests {
         let params = TokenParams {
             grant_type: "authorization_code".to_string(),
             code: code.to_string(),
+            client_id: "ANNIS".to_string(),
+            redirect_uri: "http://localhost:5712".to_string(),
         };
         let req = test::TestRequest::post()
             .uri("/token")
@@ -109,7 +119,13 @@ mod tests {
         assert_eq!(resp.status(), 200);
 
         let body = read_body(resp).await;
-        dbg!(body);
+        let response : TokenResult = serde_json::from_slice(body.bytes()).unwrap();
+
+        assert_eq!(false, response.access_token.is_empty());
+        assert_eq!(false, response.refresh_token.is_empty());
+        assert_eq!("bearer", response.token_type);
+        assert!(response.expires_in > 0);
+        assert_eq!("default-scope", response.scope);
     }
 
     #[actix_rt::test]
