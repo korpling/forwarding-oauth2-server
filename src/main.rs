@@ -6,7 +6,7 @@ use actix_web::{
     middleware::{normalize::TrailingSlash, Logger, NormalizePath},
     web, App, HttpServer,
 };
-use log::{LevelFilter};
+use log::LevelFilter;
 use simplelog::{ColorChoice, Config, TermLogger, TerminalMode};
 
 use crate::state::State;

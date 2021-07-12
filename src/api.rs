@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use oxide_auth::{
     endpoint::{AuthorizationFlow, OwnerConsent, Solicitation},
     frontends::simple::endpoint::FnSolicitor,
@@ -8,22 +8,24 @@ use oxide_auth_actix::{OAuthRequest, OAuthResponse, WebError};
 use crate::{errors::ServiceError, state::State};
 
 pub async fn get_authorize(
-    (req, state): (OAuthRequest, web::Data<State>),
+    (auth_request, http_req, state): (OAuthRequest, HttpRequest, web::Data<State>),
 ) -> Result<OAuthResponse, WebError> {
     let endpoint =
         state
             .endpoint()
             .with_solicitor(FnSolicitor(move |_: &mut _, _grant: Solicitation<'_>| {
-                let remote_user = std::env::var("REMOTE_USER").unwrap_or_default();
-                if remote_user.is_empty() {
-                    OwnerConsent::Denied
-                } else {
-                    OwnerConsent::Authorized(remote_user)
+                if let Some(remote_user) = http_req.headers().get("X-Remote-User") {
+                    if let Ok(remote_user) = remote_user.to_str() {
+                        if !remote_user.is_empty() {
+                            return OwnerConsent::Authorized(remote_user.to_string());
+                        }
+                    }
                 }
+                OwnerConsent::Denied
             }));
 
     AuthorizationFlow::prepare(endpoint)?
-        .execute(req)
+        .execute(auth_request)
         .map_err(WebError::from)
 }
 
@@ -56,8 +58,6 @@ mod tests {
         )
         .await;
 
-        std::env::set_var("REMOTE_USER", "");
-
         let req = test::TestRequest::with_uri("/authorize?response_type=code&client_id=ANNIS&redirect_uri=http%3A%2F%2Flocalhost%3A5712&scope=default-scope&state=23235253").to_request();
         let resp = test::call_service(&mut app, req).await;
 
@@ -81,9 +81,9 @@ mod tests {
         )
         .await;
 
-        std::env::set_var("REMOTE_USER", "testuser@example.com");
-
-        let req = test::TestRequest::with_uri("/authorize?response_type=code&client_id=ANNIS&redirect_uri=http%3A%2F%2Flocalhost%3A5712&scope=default-scope&state=23235253").to_request();
+        let req = test::TestRequest::with_uri(
+            "/authorize?response_type=code&client_id=ANNIS&redirect_uri=http%3A%2F%2Flocalhost%3A5712&scope=default-scope&state=23235253")
+            .header("X-Remote-User", "testuser@example.com").to_request();
         let resp = test::call_service(&mut app, req).await;
 
         assert_eq!(resp.status(), 302);
