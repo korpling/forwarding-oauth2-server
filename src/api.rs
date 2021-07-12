@@ -45,10 +45,8 @@ pub async fn refresh() -> Result<HttpResponse, ServiceError> {
 mod tests {
     use super::*;
     use actix_web::{test, web, App};
-    use serial_test::serial;
 
     #[actix_rt::test]
-    #[serial]
     async fn test_get_authorize_noenv() {
         let state = State::new().unwrap();
         let mut app = test::init_service(
@@ -71,7 +69,6 @@ mod tests {
     }
 
     #[actix_rt::test]
-    #[serial]
     async fn test_get_authorize_remove_user_present() {
         let state = State::new().unwrap();
         let mut app = test::init_service(
