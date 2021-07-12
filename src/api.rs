@@ -52,8 +52,12 @@ mod tests {
     use std::collections::HashMap;
 
     use super::*;
-    use actix_web::{App, test::{self, read_body}, web::{self, Buf}};
-    use serde::{Serialize, Deserialize};
+    use actix_web::{
+        test::{self, read_body},
+        web::{self, Buf},
+        App,
+    };
+    use serde::{Deserialize, Serialize};
     use url::Url;
 
     #[derive(Serialize)]
@@ -64,10 +68,25 @@ mod tests {
         redirect_uri: String,
     }
 
+    #[derive(Serialize)]
+    struct RefreshTokenParams {
+        grant_type: String,
+        refresh_token: String,
+        client_id: String,
+    }
+
     #[derive(Deserialize)]
     struct TokenResult {
         access_token: String,
         refresh_token: String,
+        token_type: String,
+        expires_in: i64,
+        scope: String,
+    }
+
+    #[derive(Deserialize)]
+    struct RefreshTokenResult {
+        access_token: String,
         token_type: String,
         expires_in: i64,
         scope: String,
@@ -80,7 +99,9 @@ mod tests {
             App::new()
                 .data(state)
                 .route("/authorize", web::get().to(authorize))
-                .route("/token", web::post().to(token)),
+                .route("/token", web::post().to(token))
+                .route("/refresh", web::post().to(refresh)),
+
         )
         .await;
 
@@ -101,8 +122,7 @@ mod tests {
             .collect();
 
         let code = params.get("code").unwrap();
-        dbg!(&code);
-
+     
         // Use the code to request a token
         let params = TokenParams {
             grant_type: "authorization_code".to_string(),
@@ -119,10 +139,32 @@ mod tests {
         assert_eq!(resp.status(), 200);
 
         let body = read_body(resp).await;
-        let response : TokenResult = serde_json::from_slice(body.bytes()).unwrap();
+        let response: TokenResult = serde_json::from_slice(body.bytes()).unwrap();
 
         assert_eq!(false, response.access_token.is_empty());
         assert_eq!(false, response.refresh_token.is_empty());
+        assert_eq!("bearer", response.token_type);
+        assert!(response.expires_in > 0);
+        assert_eq!("default-scope", response.scope);
+
+        // Refresh the token
+        let params = RefreshTokenParams {
+            grant_type: "refresh_token".to_string(),
+            refresh_token: response.refresh_token.to_string(),
+            client_id: "ANNIS".to_string(),
+        };
+        let req = test::TestRequest::post()
+            .uri("/refresh")
+            .set_form(&params)
+            .to_request();
+        let resp = test::call_service(&mut app, req).await;
+
+        assert_eq!(resp.status(), 200);
+
+        let body = read_body(resp).await;
+
+        let response: RefreshTokenResult = serde_json::from_slice(body.bytes()).unwrap();
+        assert_eq!(false, response.access_token.is_empty());
         assert_eq!("bearer", response.token_type);
         assert!(response.expires_in > 0);
         assert_eq!("default-scope", response.scope);
