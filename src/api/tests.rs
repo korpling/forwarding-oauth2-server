@@ -9,7 +9,8 @@ use actix_web::{
     web::{self, Buf},
     App,
 };
-use serde::{Deserialize, Serialize};
+use oxide_auth::code_grant::accesstoken::TokenResponse;
+use serde::Serialize;
 use url::Url;
 
 #[derive(Serialize)]
@@ -25,23 +26,6 @@ struct RefreshTokenParams {
     grant_type: String,
     refresh_token: String,
     client_id: String,
-}
-
-#[derive(Deserialize)]
-struct TokenResult {
-    access_token: String,
-    refresh_token: String,
-    token_type: String,
-    expires_in: i64,
-    scope: String,
-}
-
-#[derive(Deserialize)]
-struct RefreshTokenResult {
-    access_token: String,
-    token_type: String,
-    expires_in: i64,
-    scope: String,
 }
 
 #[actix_rt::test]
@@ -91,18 +75,19 @@ async fn test_retrieve_token() {
     assert_eq!(resp.status(), 200);
 
     let body = read_body(resp).await;
-    let response: TokenResult = serde_json::from_slice(body.bytes()).unwrap();
+    let response: TokenResponse = serde_json::from_slice(body.bytes()).unwrap();
 
-    assert_eq!(false, response.access_token.is_empty());
-    assert_eq!(false, response.refresh_token.is_empty());
-    assert_eq!("bearer", response.token_type);
-    assert!(response.expires_in > 0);
-    assert_eq!("default-scope", response.scope);
+    assert!(response.access_token.is_some());
+    assert!(response.refresh_token.is_some());
+    assert_eq!(Some("bearer".to_string()), response.token_type);
+    // TODO: when we use JWT token, the experiation must be in sync or disabled
+    assert_eq!(true, response.expires_in.is_some());
+    assert_eq!(Some("default-scope".to_string()), response.scope);
 
     // Refresh the token
     let params = RefreshTokenParams {
         grant_type: "refresh_token".to_string(),
-        refresh_token: response.refresh_token.to_string(),
+        refresh_token: response.refresh_token.unwrap(),
         client_id: "ANNIS".to_string(),
     };
     let req = test::TestRequest::post()
@@ -115,11 +100,14 @@ async fn test_retrieve_token() {
 
     let body = read_body(resp).await;
 
-    let response: RefreshTokenResult = serde_json::from_slice(body.bytes()).unwrap();
-    assert_eq!(false, response.access_token.is_empty());
-    assert_eq!("bearer", response.token_type);
-    assert!(response.expires_in > 0);
-    assert_eq!("default-scope", response.scope);
+    let response: TokenResponse = serde_json::from_slice(body.bytes()).unwrap();
+
+    assert!(response.access_token.is_some());
+    assert_eq!(false, response.refresh_token.is_some());
+    assert_eq!(Some("bearer".to_string()), response.token_type);
+    // TODO: when we use JWT token, the experiation must be in sync or disabled
+    assert_eq!(true, response.expires_in.is_some());
+    assert_eq!(Some("default-scope".to_string()), response.scope);
 }
 
 #[actix_rt::test]
