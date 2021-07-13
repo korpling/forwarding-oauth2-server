@@ -84,7 +84,20 @@ async fn test_retrieve_token() {
     assert_eq!(true, response.expires_in.is_some());
     assert_eq!(Some("default-scope".to_string()), response.scope);
 
-    // Refresh the token
+    // Try to refresh token with an invalid one
+    let params = RefreshTokenParams {
+        grant_type: "refresh_token".to_string(),
+        refresh_token: "isnotarvalidfreshtoken".to_string(),
+        client_id: "ANNIS".to_string(),
+    };
+    let req = test::TestRequest::post()
+        .uri("/refresh")
+        .set_form(&params)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert_eq!(resp.status(), 400);
+
+    // Refresh the token with the actual token
     let params = RefreshTokenParams {
         grant_type: "refresh_token".to_string(),
         refresh_token: response.refresh_token.unwrap(),
