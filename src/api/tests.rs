@@ -80,7 +80,7 @@ async fn test_retrieve_token() {
     assert!(response.access_token.is_some());
     assert!(response.refresh_token.is_some());
     assert_eq!(Some("bearer".to_string()), response.token_type);
-    // TODO: when we use JWT token, the experiation must be in sync or disabled
+    // TODO: when we use JWT token, the expiration must be in sync
     assert_eq!(true, response.expires_in.is_some());
     assert_eq!(Some("default-scope".to_string()), response.scope);
 
@@ -103,9 +103,9 @@ async fn test_retrieve_token() {
     let response: TokenResponse = serde_json::from_slice(body.bytes()).unwrap();
 
     assert!(response.access_token.is_some());
-    assert_eq!(false, response.refresh_token.is_some());
+    assert!(response.refresh_token.is_some());
     assert_eq!(Some("bearer".to_string()), response.token_type);
-    // TODO: when we use JWT token, the experiation must be in sync or disabled
+    // TODO: when we use JWT token, the expiration must be in sync
     assert_eq!(true, response.expires_in.is_some());
     assert_eq!(Some("default-scope".to_string()), response.scope);
 }
