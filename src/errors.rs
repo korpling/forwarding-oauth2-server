@@ -24,15 +24,25 @@ impl From<ParseScopeErr> for StartupError {
 
 impl StartupError {
     pub fn into_io(self) -> std::io::Error {
-        match self {
-            StartupError::InvalidClientUrl(_) => {
-                std::io::Error::new(std::io::ErrorKind::InvalidData, self)
-            }
-            StartupError::InvalidCharacterInScope(_) => {
-                std::io::Error::new(std::io::ErrorKind::InvalidData, self)
-            }
-            StartupError::JWT(_) => std::io::Error::new(std::io::ErrorKind::InvalidData, self),
-            StartupError::Config(_) => std::io::Error::new(std::io::ErrorKind::InvalidData, self),
+        std::io::Error::new(std::io::ErrorKind::InvalidData, self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use oxide_auth::primitives::scope::Scope;
+
+    #[test]
+    fn test_invalid_scope_character() {
+        let scope = "A\"BC".parse::<Scope>();
+
+        assert!(scope.is_err());
+        let err: StartupError = scope.unwrap_err().into();
+
+        match err {
+            StartupError::InvalidCharacterInScope(c) => assert_eq!('\"', c),
+            _ => panic!("Wrong error type"),
         }
     }
 }

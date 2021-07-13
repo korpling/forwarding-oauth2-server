@@ -22,7 +22,6 @@ pub struct Claims {
 
 pub struct JWTIssuer {
     settings: Settings,
-    access: HashMap<String, Grant>,
     refresh: HashMap<String, Grant>,
     refresh_token_generator: RandomGenerator,
 }
@@ -31,7 +30,6 @@ impl JWTIssuer {
     pub fn new(settings: Settings) -> JWTIssuer {
         JWTIssuer {
             settings,
-            access: HashMap::new(),
             refresh: HashMap::new(),
             refresh_token_generator: RandomGenerator::new(128),
         }
@@ -68,7 +66,6 @@ impl Issuer for JWTIssuer {
         let token = self.create_token(&claims)?;
         let refresh = self.refresh_token_generator.tag(0, &grant)?;
 
-        self.access.insert(token.clone(), grant.clone());
         self.refresh.insert(refresh.clone(), grant.clone());
 
         Ok(IssuedToken {
@@ -99,9 +96,9 @@ impl Issuer for JWTIssuer {
 
     fn recover_token<'a>(
         &'a self,
-        token: &'a str,
+        _token: &'a str,
     ) -> Result<Option<oxide_auth::primitives::grant::Grant>, ()> {
-        Ok(self.access.get(token).map(|grant| grant.clone()))
+        Err(())
     }
 
     fn recover_refresh<'a>(
