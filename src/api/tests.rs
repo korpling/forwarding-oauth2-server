@@ -30,7 +30,7 @@ struct RefreshTokenParams {
 
 #[actix_rt::test]
 async fn test_retrieve_token() {
-    let (_setting, state) = init_app().unwrap();
+    let (_setting, state) = init_app(std::env::args_os()).unwrap();
     let mut app = test::init_service(
         App::new()
             .data(state)
@@ -124,7 +124,7 @@ async fn test_retrieve_token() {
 
 #[actix_rt::test]
 async fn test_invalid_token_code() {
-    let (_setting, state) = init_app().unwrap();
+    let (_setting, state) = init_app(std::env::args_os()).unwrap();
 
     let mut app = test::init_service(
         App::new()
@@ -159,7 +159,7 @@ async fn test_invalid_token_code() {
 
 #[actix_rt::test]
 async fn test_authorize_no_header() {
-    let (_setting, state) = init_app().unwrap();
+    let (_setting, state) = init_app(std::env::args_os()).unwrap();
 
     let mut app = test::init_service(
         App::new()

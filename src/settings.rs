@@ -1,3 +1,7 @@
+use std::io::Write;
+use std::ops::Deref;
+use tempfile::NamedTempFile;
+
 use jsonwebtoken::EncodingKey;
 use serde::{Deserialize, Serialize};
 
@@ -79,10 +83,30 @@ impl Default for Client {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Settings {
     pub auth: Auth,
     pub logging: Logging,
     pub bind: Bind,
     pub client: Client,
+}
+
+impl Settings {
+    pub fn with_file<S: Deref<Target = str>>(config_file: S) -> Result<Self, StartupError> {
+        let mut config = config::Config::default();
+
+        // Write default settings to temporary file
+        let mut default_file = NamedTempFile::new()?;
+        write!(default_file, "{}", toml::to_string(&Settings::default())?)?;
+
+        config.merge(config::File::new(
+            &default_file.path().to_string_lossy(),
+            config::FileFormat::Toml,
+        ))?;
+
+        let from_file = config::File::new(&config_file, config::FileFormat::Toml);
+        config.merge(from_file)?;
+        let result: Settings = config.try_into()?;
+        Ok(result)
+    }
 }

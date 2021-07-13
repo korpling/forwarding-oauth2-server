@@ -4,6 +4,8 @@ mod jwt;
 mod settings;
 mod state;
 
+use std::ffi::OsString;
+
 use actix_web::{
     middleware::{normalize::TrailingSlash, Logger, NormalizePath},
     web, App, HttpServer,
@@ -15,7 +17,11 @@ use simplelog::{ColorChoice, Config, SimpleLogger, TermLogger, TerminalMode};
 
 use crate::{settings::Settings, state::State};
 
-fn init_app() -> std::result::Result<(settings::Settings, State), StartupError> {
+fn init_app<I, T>(args: I) -> std::result::Result<(settings::Settings, State), StartupError>
+where
+    I: IntoIterator<Item = T>,
+    T: Into<OsString> + Clone,
+{
     // Parse CLI arguments
     let matches = clap::App::new("shibboleth-oauth2-forwarding")
         .version(env!("CARGO_PKG_VERSION"))
@@ -28,11 +34,11 @@ fn init_app() -> std::result::Result<(settings::Settings, State), StartupError> 
                 .help("Configuration file location")
                 .takes_value(true),
         )
-        .get_matches();
+        .get_matches_from(args);
 
     // Load configuration file(s)
     let settings = if let Some(path) = matches.value_of_lossy("config") {
-        confy::load_path(path.to_string())?
+        Settings::with_file(path.to_string())?
     } else {
         Settings::default()
     };
@@ -73,10 +79,11 @@ fn init_app() -> std::result::Result<(settings::Settings, State), StartupError> 
 
 #[actix_web::main]
 pub async fn main() -> std::io::Result<()> {
-    let (settings, state) = init_app().map_err(StartupError::into_io)?;
+    let (settings, state) = init_app(std::env::args_os()).map_err(StartupError::into_io)?;
+
     let state = web::Data::new(state);
 
-    HttpServer::new(move || {
+    let server = HttpServer::new(move || {
         App::new()
             .app_data(state.clone())
             .wrap(NormalizePath::new(TrailingSlash::Trim))
@@ -90,7 +97,38 @@ pub async fn main() -> std::io::Result<()> {
             .route("/refresh", web::post().to(api::refresh))
     })
     .bind(format!("{}:{}", settings.bind.host, settings.bind.port))
-    .expect("Failed to bind to socket")
-    .run()
-    .await
+    .expect("Failed to bind to socket");
+
+    server.run().await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    #[test]
+    fn partial_partial_config_file() -> Result<(), Box<dyn std::error::Error>> {
+        let mut file = NamedTempFile::new()?;
+        writeln!(
+            file,
+            r#"
+    [client]
+    doesnotexist = "something"
+    id = "anotherid"
+    "#
+        )?;
+
+        let test_args: Vec<OsString> =
+            vec!["thisprogram".into(), "--config".into(), file.path().into()];
+        let result = init_app(test_args);
+
+        // The invalid field should be ignored, the client ID should be set
+        assert!(result.is_ok());
+        let (settings, _state) = result.unwrap();
+
+        assert_eq!("anotherid", settings.client.id);
+        Ok(())
+    }
 }

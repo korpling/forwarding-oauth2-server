@@ -11,7 +11,11 @@ pub enum StartupError {
     #[error("JSON Web Token Error")]
     JWT(#[from] jsonwebtoken::errors::Error),
     #[error("Invalid configuration file")]
-    Config(#[from] confy::ConfyError),
+    Config(#[from] config::ConfigError),
+    #[error("IO error")]
+    IO(#[from] std::io::Error),
+    #[error("TOML serialization error")]
+    TOML(#[from] toml::ser::Error),
 }
 
 impl From<ParseScopeErr> for StartupError {
