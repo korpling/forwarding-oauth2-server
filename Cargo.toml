@@ -14,7 +14,6 @@ config = "0.11"
 log = "0.4"
 oxide-auth = "0.5"
 oxide-auth-actix = "0.1"
-oxide-auth-async = "0.1"
 serde = { version = "1", features = ["derive"] }
 simplelog = "0.10"
 thiserror = "1"

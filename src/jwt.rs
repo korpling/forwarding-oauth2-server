@@ -51,7 +51,12 @@ impl JWTIssuer {
         let mut variables: HashMap<String, String> = HashMap::new();
         variables.insert("sub".to_string(), sub);
         variables.insert("exp".to_string(), exp.to_string());
-        // TOOD: add HTTP headers as variables
+        // Add all public extensions as arguments
+        for (k, v) in grant.extensions.public() {
+            variables
+                .entry(k.to_string())
+                .or_insert(v.unwrap_or_default().to_string());
+        }
 
         let unsigned_token_raw = hb.render_template(default_template, &variables)?;
 
