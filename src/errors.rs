@@ -35,10 +35,12 @@ impl StartupError {
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum RuntimeError {
-    #[error("Could not parse template")]
+    #[error("Could not parse template: {0}")]
     TemplateParsing(#[from] handlebars::RenderError),
-    #[error("JSON Web Token Error")]
+    #[error("JSON Web Token error: {0}")]
     JWT(#[from] jsonwebtoken::errors::Error),
+    #[error("JSON error: {0}")]
+    JSON(#[from] serde_json::error::Error),
 }
 
 #[cfg(test)]

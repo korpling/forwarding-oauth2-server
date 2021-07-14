@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use log::error;
 use oxide_auth::{
     endpoint::Issuer,
     primitives::{
@@ -10,6 +11,7 @@ use oxide_auth::{
 };
 
 use serde::{Deserialize, Serialize};
+use serde_json::Map;
 
 use crate::{errors::RuntimeError, settings::Settings};
 
@@ -51,7 +53,11 @@ impl JWTIssuer {
         variables.insert("exp".to_string(), exp.to_string());
         // TOOD: add HTTP headers as variables
 
-        let unsigned_token = hb.render_template(default_template, &variables)?;
+        let unsigned_token_raw = hb.render_template(default_template, &variables)?;
+
+        // Parse JSON so encoding it with serde later on will produce a correct value
+        let unsigned_token: Map<String, serde_json::Value> =
+            serde_json::from_str(&unsigned_token_raw)?;
 
         let key = self
             .settings
@@ -71,7 +77,9 @@ impl Issuer for JWTIssuer {
         &mut self,
         grant: oxide_auth::primitives::grant::Grant,
     ) -> Result<oxide_auth::primitives::prelude::IssuedToken, ()> {
-        let token = self.create_token(&grant).map_err(|_| ())?;
+        let token = self
+            .create_token(&grant)
+            .map_err(|e| (error!("Could not issue token: {}", e)))?;
         let refresh = self.refresh_token_generator.tag(0, &grant)?;
 
         self.refresh.insert(refresh.clone(), grant.clone());
@@ -92,7 +100,9 @@ impl Issuer for JWTIssuer {
         // Invalidate old refresh token
         self.refresh.remove(refresh);
 
-        let token = self.create_token(&grant).map_err(|_| ())?;
+        let token = self
+            .create_token(&grant)
+            .map_err(|e| (error!("Could not refresh token: {}", e)))?;
         let new_refresh = self.refresh_token_generator.tag(0, &grant)?;
         Ok(RefreshedToken {
             token: token,
