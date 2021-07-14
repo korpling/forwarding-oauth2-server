@@ -15,13 +15,14 @@ log = "0.4"
 oxide-auth = "0.5"
 oxide-auth-actix = "0.1"
 oxide-auth-async = "0.1"
-serde = {version = "1", features = ["derive"]}
+serde = { version = "1", features = ["derive"] }
 simplelog = "0.10"
 thiserror = "1"
 url = "2"
 jsonwebtoken = "7.2"
 tempfile = "3.2"
 toml = "0.5"
+handlebars = "4"
 
 [dev-dependencies]
 actix-rt = "2"

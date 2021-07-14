@@ -11,7 +11,7 @@ use oxide_auth::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::settings::Settings;
+use crate::{errors::RuntimeError, settings::Settings};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claims {
@@ -35,25 +35,34 @@ impl JWTIssuer {
         }
     }
 
-    fn create_token<'a>(&self, claims: &Claims) -> Result<String, ()> {
+    fn create_token(
+        &self,
+        grant: &oxide_auth::primitives::grant::Grant,
+    ) -> Result<String, RuntimeError> {
+        let sub = grant.owner_id.clone();
+        let exp = grant.until.timestamp();
+
+        // Parse template and apply substitutions
+        let hb = handlebars::Handlebars::new();
+        let default_template = include_str!("default-token-template.json");
+
+        let mut variables: HashMap<String, String> = HashMap::new();
+        variables.insert("sub".to_string(), sub);
+        variables.insert("exp".to_string(), exp.to_string());
+        // TOOD: add HTTP headers as variables
+
+        let unsigned_token = hb.render_template(default_template, &variables)?;
+
         let key = self
             .settings
             .auth
             .token_verification
-            .create_encoding_key()
-            .map_err(|_| ())?;
+            .create_encoding_key()?;
         let header =
             jsonwebtoken::Header::new(self.settings.auth.token_verification.as_algorithm());
-        let token_str = jsonwebtoken::encode(&header, &claims, &key).map_err(|_| ())?;
-        Ok(token_str)
-    }
+        let token_str = jsonwebtoken::encode(&header, &unsigned_token, &key)?;
 
-    fn create_claims(&self, grant: &oxide_auth::primitives::grant::Grant) -> Claims {
-        let claims = Claims {
-            sub: grant.owner_id.clone(),
-            exp: Some(grant.until.timestamp()),
-        };
-        claims
+        Ok(token_str)
     }
 }
 
@@ -62,8 +71,7 @@ impl Issuer for JWTIssuer {
         &mut self,
         grant: oxide_auth::primitives::grant::Grant,
     ) -> Result<oxide_auth::primitives::prelude::IssuedToken, ()> {
-        let claims = self.create_claims(&grant);
-        let token = self.create_token(&claims)?;
+        let token = self.create_token(&grant).map_err(|_| ())?;
         let refresh = self.refresh_token_generator.tag(0, &grant)?;
 
         self.refresh.insert(refresh.clone(), grant.clone());
@@ -84,10 +92,10 @@ impl Issuer for JWTIssuer {
         // Invalidate old refresh token
         self.refresh.remove(refresh);
 
-        let claims = self.create_claims(&grant);
+        let token = self.create_token(&grant).map_err(|_| ())?;
         let new_refresh = self.refresh_token_generator.tag(0, &grant)?;
         Ok(RefreshedToken {
-            token: self.create_token(&claims)?,
+            token: token,
             refresh: Some(new_refresh),
             until: grant.until,
             token_type: Bearer,

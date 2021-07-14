@@ -5,7 +5,7 @@ use tempfile::NamedTempFile;
 use jsonwebtoken::EncodingKey;
 use serde::{Deserialize, Serialize};
 
-use crate::errors::StartupError;
+use crate::errors::{RuntimeError, StartupError};
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Logging {
@@ -35,7 +35,7 @@ pub enum JWTVerification {
 }
 
 impl JWTVerification {
-    pub fn create_encoding_key(&self) -> Result<EncodingKey, StartupError> {
+    pub fn create_encoding_key(&self) -> Result<EncodingKey, RuntimeError> {
         let key = match &self {
             JWTVerification::HS256 { secret } => {
                 jsonwebtoken::EncodingKey::from_secret(secret.as_bytes())

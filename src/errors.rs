@@ -32,6 +32,15 @@ impl StartupError {
     }
 }
 
+#[derive(Debug, Error)]
+#[non_exhaustive]
+pub enum RuntimeError {
+    #[error("Could not parse template")]
+    TemplateParsing(#[from] handlebars::RenderError),
+    #[error("JSON Web Token Error")]
+    JWT(#[from] jsonwebtoken::errors::Error),
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
