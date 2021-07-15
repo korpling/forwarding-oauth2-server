@@ -102,7 +102,6 @@ pub async fn token(
     } else {
         HashMap::new()
     };
-    dbg!(&headers);
     let extension = HeaderExtension { headers };
 
     let extended = Extended::extend_with(endpoint, extension);

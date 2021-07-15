@@ -12,7 +12,7 @@ Shibboleth/SAML meta data fields that are passed through as HTTP headers (like `
 - [X] Support configuration files for the various settings
 - [X] Generate JWT tokens as bearer tokens
 - [X] Allow to define mappings between HTTP headers and generated JWT tokens
-- [ ] Document integration with the Apache2 Shibboleth module and how to start this service
+- [ ] Document integration with the Apache2 Shibboleth module and how to configure and start this service
 - [ ] Add release binaries for Linux
 
 ## Background

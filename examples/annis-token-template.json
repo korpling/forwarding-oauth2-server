@@ -1,0 +1,8 @@
+{
+    "sub": "{{sub}}",
+    "exp": {{exp}},
+    {{#if x-admin}}
+    "https://corpus-tools.org/annis/roles": ["admin"],
+    {{/if}}
+    "https://corpus-tools.org/annis/groups": ["academic"]
+}
