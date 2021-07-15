@@ -8,7 +8,6 @@ version = "0.1.0"
 
 [dependencies]
 actix-web = "3"
-actix-web-actors = "3"
 clap = "2"
 config = "0.11"
 log = "0.4"

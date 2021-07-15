@@ -83,8 +83,8 @@ pub struct Client {
 impl Default for Client {
     fn default() -> Self {
         Client {
-            id: "ANNIS".to_string(),
-            redirect_uri: "http://localhost:5712".to_string(),
+            id: "default".to_string(),
+            redirect_uri: "http://localhost:8080".to_string(),
         }
     }
 }

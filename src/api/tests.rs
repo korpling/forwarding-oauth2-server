@@ -41,7 +41,7 @@ async fn test_retrieve_token() {
     .await;
 
     let req = test::TestRequest::get().uri(
-            "/authorize?response_type=code&client_id=ANNIS&redirect_uri=http%3A%2F%2Flocalhost%3A5712&scope=default-scope&state=23235253")
+            "/authorize?response_type=code&client_id=default&redirect_uri=http%3A%2F%2Flocalhost%3A8080&scope=default-scope&state=23235253")
             .header("X-Remote-User", "testuser@example.com").to_request();
     let resp = test::call_service(&mut app, req).await;
 
@@ -62,8 +62,8 @@ async fn test_retrieve_token() {
     let params = TokenParams {
         grant_type: "authorization_code".to_string(),
         code: code.to_string(),
-        client_id: "ANNIS".to_string(),
-        redirect_uri: "http://localhost:5712".to_string(),
+        client_id: "default".to_string(),
+        redirect_uri: "http://localhost:8080".to_string(),
     };
     let req = test::TestRequest::post()
         .uri("/token")
@@ -87,7 +87,7 @@ async fn test_retrieve_token() {
     let params = RefreshTokenParams {
         grant_type: "refresh_token".to_string(),
         refresh_token: "isnotarvalidfreshtoken".to_string(),
-        client_id: "ANNIS".to_string(),
+        client_id: "default".to_string(),
     };
     let req = test::TestRequest::post()
         .uri("/refresh")
@@ -100,7 +100,7 @@ async fn test_retrieve_token() {
     let params = RefreshTokenParams {
         grant_type: "refresh_token".to_string(),
         refresh_token: response.refresh_token.unwrap(),
-        client_id: "ANNIS".to_string(),
+        client_id: "default".to_string(),
     };
     let req = test::TestRequest::post()
         .uri("/refresh")
@@ -168,7 +168,7 @@ async fn test_authorize_no_header() {
     )
     .await;
 
-    let req = test::TestRequest::with_uri("/authorize?response_type=code&client_id=ANNIS&redirect_uri=http%3A%2F%2Flocalhost%3A5712&scope=default-scope&state=23235253").to_request();
+    let req = test::TestRequest::with_uri("/authorize?response_type=code&client_id=default&redirect_uri=http%3A%2F%2Flocalhost%3A8080&scope=default-scope").to_request();
     let resp = test::call_service(&mut app, req).await;
 
     assert_eq!(resp.status(), 302);
@@ -176,6 +176,6 @@ async fn test_authorize_no_header() {
     let location = resp.headers().get("location").unwrap().to_str().unwrap();
     assert_eq!(
         location,
-        "http://localhost:5712/?state=23235253&error=access_denied"
+        "http://localhost:8080/?error=access_denied"
     );
 }

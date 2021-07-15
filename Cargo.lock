@@ -23,8 +23,6 @@ dependencies = [
  "smallvec",
  "tokio 0.2.25",
  "tokio-util",
- "trust-dns-proto",
- "trust-dns-resolver",
 ]
 
 [[package]]
@@ -296,22 +294,6 @@ dependencies = [
  "time 0.2.27",
  "tinyvec",
  "url",
-]
-
-[[package]]
-name = "actix-web-actors"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f6edf3c2693e2a8c422800c87ee89a6a4eac7dd01109bc172a1093ce1f4f001"
-dependencies = [
- "actix",
- "actix-codec",
- "actix-http",
- "actix-web",
- "bytes 0.5.6",
- "futures-channel",
- "futures-core",
- "pin-project 0.4.28",
 ]
 
 [[package]]
@@ -2000,7 +1982,6 @@ version = "0.1.0"
 dependencies = [
  "actix-rt 2.2.0",
  "actix-web",
- "actix-web-actors",
  "clap",
  "config",
  "handlebars",

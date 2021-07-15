@@ -5,3 +5,7 @@ token_template = "examples/annis-token-template.json"
 [auth.token_verification]
 type = "HS256"
 secret = "random-words-are-not-things"
+
+[client]
+id = "ANNIS"
+redirect_uri = "http://localhost:5712"
