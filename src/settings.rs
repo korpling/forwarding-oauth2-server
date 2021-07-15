@@ -8,6 +8,12 @@ use serde::{Deserialize, Serialize};
 use crate::errors::{RuntimeError, StartupError};
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
+pub struct Mapping {
+    pub token_template: Option<String>,
+    pub include_header: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Logging {
     pub debug: bool,
 }
@@ -89,6 +95,7 @@ pub struct Settings {
     pub logging: Logging,
     pub bind: Bind,
     pub client: Client,
+    pub mapping: Mapping,
 }
 
 impl Settings {

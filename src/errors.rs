@@ -41,6 +41,8 @@ pub enum RuntimeError {
     JWT(#[from] jsonwebtoken::errors::Error),
     #[error("JSON error: {0}")]
     JSON(#[from] serde_json::error::Error),
+    #[error("IO error")]
+    IO(#[from] std::io::Error),
 }
 
 #[cfg(test)]

@@ -10,6 +10,7 @@ pub struct State {
     registrar: Mutex<ClientMap>,
     authorizer: Mutex<AuthMap<RandomGenerator>>,
     issuer: Mutex<JWTIssuer>,
+    pub settings: Settings,
 }
 
 impl State {
@@ -38,6 +39,7 @@ impl State {
             registrar: Mutex::new(registrar),
             issuer: Mutex::new(issuer),
             authorizer: Mutex::new(authorizer),
+            settings: settings.clone(),
         };
         Ok(state)
     }

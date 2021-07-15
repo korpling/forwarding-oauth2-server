@@ -2008,6 +2008,7 @@ dependencies = [
  "log",
  "oxide-auth",
  "oxide-auth-actix",
+ "regex",
  "serde 1.0.126",
  "serde_json",
  "simplelog",

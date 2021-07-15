@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use log::error;
 use oxide_auth::{
@@ -46,7 +46,12 @@ impl JWTIssuer {
 
         // Parse template and apply substitutions
         let hb = handlebars::Handlebars::new();
-        let default_template = include_str!("default-token-template.json");
+        let token_template: Cow<str> =
+            if let Some(token_template_file) = &self.settings.mapping.token_template {
+                std::fs::read_to_string(token_template_file)?.into()
+            } else {
+                include_str!("default-token-template.json").into()
+            };
 
         let mut variables: HashMap<String, String> = HashMap::new();
         variables.insert("sub".to_string(), sub);
@@ -58,7 +63,7 @@ impl JWTIssuer {
                 .or_insert(v.unwrap_or_default().to_string());
         }
 
-        let unsigned_token_raw = hb.render_template(default_template, &variables)?;
+        let unsigned_token_raw = hb.render_template(&token_template, &variables)?;
 
         // Parse JSON so encoding it with serde later on will produce a correct value
         let unsigned_token: Map<String, serde_json::Value> =
