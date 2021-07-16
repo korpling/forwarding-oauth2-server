@@ -71,11 +71,11 @@ impl JWTIssuer {
 
         let key = self
             .settings
-            .auth
+            .client
             .token_verification
             .create_encoding_key()?;
         let header =
-            jsonwebtoken::Header::new(self.settings.auth.token_verification.as_algorithm());
+            jsonwebtoken::Header::new(self.settings.client.token_verification.as_algorithm());
         let token_str = jsonwebtoken::encode(&header, &unsigned_token, &key)?;
 
         Ok(token_str)

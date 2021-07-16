@@ -55,17 +55,24 @@ impl AccessTokenExtension for HeaderExtension {
 pub async fn authorize(
     (auth_request, http_req, state): (OAuthRequest, HttpRequest, web::Data<State>),
 ) -> Result<OAuthResponse, WebError> {
-    let remote_user_header = http_req.headers().get("X-Remote-User");
+    let headers = http_req.headers().clone();
+    let settings = state.settings.clone();
     let endpoint = state.endpoint().with_solicitor(FnSolicitor(
-        move |_request: &mut OAuthRequest, _pre_grant: Solicitation| {
-            if let Some(remote_user) = remote_user_header {
-                if let Ok(remote_user) = remote_user.to_str() {
-                    if !remote_user.is_empty() {
-                        return OwnerConsent::Authorized(remote_user.to_string());
+        move |_request: &mut OAuthRequest, _pre_grant: Solicitation| match &settings
+            .mapping
+            .sub_header
+        {
+            Some(sub_header) => {
+                if let Some(remote_user) = headers.get(sub_header) {
+                    if let Ok(remote_user) = remote_user.to_str() {
+                        if !remote_user.is_empty() {
+                            return OwnerConsent::Authorized(remote_user.to_string());
+                        }
                     }
                 }
+                OwnerConsent::Denied
             }
-            OwnerConsent::Denied
+            None => OwnerConsent::Authorized(settings.mapping.default_sub.clone()),
         },
     ));
 

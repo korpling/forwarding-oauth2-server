@@ -7,10 +7,24 @@ use serde::{Deserialize, Serialize};
 
 use crate::errors::{RuntimeError, StartupError};
 
-#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Mapping {
     pub token_template: Option<String>,
     pub include_header: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sub_header: Option<String>,
+    pub default_sub: String,
+}
+
+impl Default for Mapping {
+    fn default() -> Self {
+        Mapping {
+            token_template: None,
+            include_header: None,
+            sub_header: None,
+            default_sub: "user".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
@@ -69,16 +83,12 @@ impl Default for JWTVerification {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, Clone)]
-pub struct Auth {
-    pub token_verification: JWTVerification,
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Client {
     pub id: String,
     pub redirect_uri: String,
     pub secret: Option<String>,
+    pub token_verification: JWTVerification,
 }
 
 impl Default for Client {
@@ -87,13 +97,13 @@ impl Default for Client {
             id: "default".to_string(),
             redirect_uri: "http://localhost:8080".to_string(),
             secret: None,
+            token_verification: JWTVerification::default(),
         }
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Settings {
-    pub auth: Auth,
     pub logging: Logging,
     pub bind: Bind,
     pub client: Client,

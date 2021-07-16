@@ -17,32 +17,7 @@ use simplelog::{ColorChoice, Config, SimpleLogger, TermLogger, TerminalMode};
 
 use crate::{settings::Settings, state::State};
 
-fn init_app<I, T>(args: I) -> std::result::Result<(settings::Settings, State), StartupError>
-where
-    I: IntoIterator<Item = T>,
-    T: Into<OsString> + Clone,
-{
-    // Parse CLI arguments
-    let matches = clap::App::new("shibboleth-oauth2-forwarding")
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .about("OAuth2 server for wrapping Shibboleth IdPs")
-        .arg(
-            Arg::with_name("config")
-                .short("c")
-                .long("config")
-                .help("Configuration file location")
-                .takes_value(true),
-        )
-        .get_matches_from(args);
-
-    // Load configuration file(s)
-    let settings = if let Some(path) = matches.value_of_lossy("config") {
-        Settings::with_file(path.to_string())?
-    } else {
-        Settings::default()
-    };
-
+fn init_app(settings: &Settings) -> std::result::Result<State, StartupError> {
     let log_filter = if settings.logging.debug {
         LevelFilter::Debug
     } else {
@@ -73,13 +48,46 @@ where
     info!("Logging with level {}", log_filter);
 
     let state = State::new(&settings)?;
+    Ok(state)
+}
+
+fn init_app_from_args<I, T>(
+    args: I,
+) -> std::result::Result<(settings::Settings, State), StartupError>
+where
+    I: IntoIterator<Item = T>,
+    T: Into<OsString> + Clone,
+{
+    // Parse CLI arguments
+    let matches = clap::App::new("shibboleth-oauth2-forwarding")
+        .version(env!("CARGO_PKG_VERSION"))
+        .author(env!("CARGO_PKG_AUTHORS"))
+        .about("OAuth2 server for wrapping Shibboleth IdPs")
+        .arg(
+            Arg::with_name("config")
+                .short("c")
+                .long("config")
+                .help("Configuration file location")
+                .takes_value(true),
+        )
+        .get_matches_from(args);
+
+    // Load configuration file(s)
+    let settings = if let Some(path) = matches.value_of_lossy("config") {
+        Settings::with_file(path.to_string())?
+    } else {
+        Settings::default()
+    };
+
+    let state = init_app(&settings)?;
 
     Ok((settings, state))
 }
 
 #[actix_web::main]
 pub async fn main() -> std::io::Result<()> {
-    let (settings, state) = init_app(std::env::args_os()).map_err(StartupError::into_io)?;
+    let (settings, state) =
+        init_app_from_args(std::env::args_os()).map_err(StartupError::into_io)?;
 
     let state = web::Data::new(state);
 
@@ -122,7 +130,7 @@ mod tests {
 
         let test_args: Vec<OsString> =
             vec!["thisprogram".into(), "--config".into(), file.path().into()];
-        let result = init_app(test_args);
+        let result = init_app_from_args(test_args);
 
         // The invalid field should be ignored, the client ID should be set
         assert!(result.is_ok());
