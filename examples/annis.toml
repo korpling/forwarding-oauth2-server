@@ -1,11 +1,12 @@
 [mapping]
 include_header = "x-.*"
 token_template = "examples/annis-token-template.json"
-
-[auth.token_verification]
-type = "HS256"
-secret = "random-words-are-not-things"
+default_sub = "academic"
 
 [client]
 id = "ANNIS"
 redirect_uri = "http://localhost:5712"
+
+[client.token_verification]
+type = "HS256"
+secret = "random-words-are-not-secure-please-change-me"
