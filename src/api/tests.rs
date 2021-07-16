@@ -174,8 +174,5 @@ async fn test_authorize_no_header() {
     assert_eq!(resp.status(), 302);
     assert!(resp.headers().get("location").is_some());
     let location = resp.headers().get("location").unwrap().to_str().unwrap();
-    assert_eq!(
-        location,
-        "http://localhost:8080/?error=access_denied"
-    );
+    assert_eq!(location, "http://localhost:8080/?error=access_denied");
 }

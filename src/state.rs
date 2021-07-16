@@ -40,9 +40,7 @@ impl State {
                 "default-scope".parse()?,
             )
         };
-        let registrar = vec![client]
-        .into_iter()
-        .collect();
+        let registrar = vec![client].into_iter().collect();
         let authorizer = AuthMap::new(RandomGenerator::new(16));
         let issuer = JWTIssuer::new(settings.clone());
         let state = State {
