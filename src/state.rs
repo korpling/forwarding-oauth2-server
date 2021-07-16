@@ -26,11 +26,21 @@ impl State {
     }
 
     pub fn new(settings: &Settings) -> Result<Self, StartupError> {
-        let registrar = vec![Client::public(
-            &settings.client.id,
-            settings.client.redirect_uri.parse::<url::Url>()?.into(),
-            "default-scope".parse()?,
-        )]
+        let client = if let Some(client_secret) = &settings.client.secret {
+            Client::confidential(
+                &settings.client.id,
+                settings.client.redirect_uri.parse::<url::Url>()?.into(),
+                "default-scope".parse()?,
+                client_secret.as_bytes(),
+            )
+        } else {
+            Client::public(
+                &settings.client.id,
+                settings.client.redirect_uri.parse::<url::Url>()?.into(),
+                "default-scope".parse()?,
+            )
+        };
+        let registrar = vec![client]
         .into_iter()
         .collect();
         let authorizer = AuthMap::new(RandomGenerator::new(16));

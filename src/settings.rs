@@ -78,6 +78,7 @@ pub struct Auth {
 pub struct Client {
     pub id: String,
     pub redirect_uri: String,
+    pub secret: Option<String>,
 }
 
 impl Default for Client {
@@ -85,6 +86,7 @@ impl Default for Client {
         Client {
             id: "default".to_string(),
             redirect_uri: "http://localhost:8080".to_string(),
+            secret: None,
         }
     }
 }
