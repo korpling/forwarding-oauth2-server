@@ -20,6 +20,9 @@ struct HeaderExtension {
 }
 
 impl Extension for HeaderExtension {
+    fn authorization(&mut self) -> Option<&mut dyn AuthorizationExtension> {
+        Some(self)
+    }
     fn access_token(&mut self) -> Option<&mut dyn AccessTokenExtension> {
         Some(self)
     }
@@ -75,16 +78,6 @@ pub async fn authorize(
             None => OwnerConsent::Authorized(settings.mapping.default_sub.clone()),
         },
     ));
-
-    AuthorizationFlow::prepare(endpoint)?
-        .execute(auth_request)
-        .map_err(WebError::from)
-}
-
-pub async fn token(
-    (auth_request, http_req, state): (OAuthRequest, HttpRequest, web::Data<State>),
-) -> Result<OAuthResponse, WebError> {
-    let endpoint = state.endpoint();
     // Add all filtered headers to map
     // TODO: allow to configure the filter criterion
     let headers: HashMap<_, _> = if let Some(include_header) =
@@ -110,10 +103,19 @@ pub async fn token(
         HashMap::new()
     };
     let extension = HeaderExtension { headers };
-
     let extended = Extended::extend_with(endpoint, extension);
 
-    AccessTokenFlow::prepare(extended)?
+    AuthorizationFlow::prepare(extended)?
+        .execute(auth_request)
+        .map_err(WebError::from)
+}
+
+pub async fn token(
+    (auth_request, state): (OAuthRequest, web::Data<State>),
+) -> Result<OAuthResponse, WebError> {
+    let endpoint = state.endpoint();
+
+    AccessTokenFlow::prepare(endpoint)?
         .execute(auth_request)
         .map_err(WebError::from)
 }
