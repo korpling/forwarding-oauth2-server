@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{
+    dev::HttpResponseBuilder,
+    http::{header::ContentType, StatusCode},
+    web, HttpRequest, HttpResponse,
+};
 use log::{debug, error};
 use oxide_auth::{
     endpoint::{
@@ -163,7 +167,10 @@ pub async fn userinfo((req, state): (HttpRequest, web::Data<State>)) -> Result<H
                 let token = auth_header[6..auth_header.len()].trim();
                 return match verify_token(token, &state.settings) {
                     // Use the verified claim
-                    Ok(claim) => Ok(HttpResponse::Ok().body(claim.to_string()).into()),
+                    Ok(claim) => Ok(HttpResponseBuilder::new(StatusCode::OK)
+                        .content_type("application/json")
+                        .body(claim.to_string())
+                        .into()),
                     // If a token was given but invalid, report an error
                     Err(e) => {
                         debug!("Invalid request to userinfo endpoint: {}", e);
