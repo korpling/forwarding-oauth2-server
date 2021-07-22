@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use actix_web::{web, HttpRequest};
-use log::error;
 use oxide_auth::{
     endpoint::{
         AccessTokenExtension, AccessTokenFlow, AuthorizationExtension, AuthorizationFlow,
@@ -11,7 +10,6 @@ use oxide_auth::{
     primitives::grant::{Extensions, Value},
 };
 use oxide_auth_actix::{OAuthRequest, OAuthResponse, WebError};
-use regex::Regex;
 
 use crate::state::State;
 
@@ -23,9 +21,6 @@ impl Extension for HeaderExtension {
     fn authorization(&mut self) -> Option<&mut dyn AuthorizationExtension> {
         Some(self)
     }
-    fn access_token(&mut self) -> Option<&mut dyn AccessTokenExtension> {
-        Some(self)
-    }
 }
 
 impl AuthorizationExtension for HeaderExtension {
@@ -34,6 +29,7 @@ impl AuthorizationExtension for HeaderExtension {
         _request: &dyn oxide_auth::code_grant::authorization::Request,
     ) -> std::result::Result<Extensions, ()> {
         let mut extensions = Extensions::new();
+        // Set all extensions by using the header values
         for (n, v) in &self.headers {
             extensions.set_raw(n.to_string(), Value::Public(Some(v.to_string())));
         }
@@ -41,17 +37,23 @@ impl AuthorizationExtension for HeaderExtension {
     }
 }
 
-impl AccessTokenExtension for HeaderExtension {
+/// An AccessTokenExtension that just copies all extensions from the authorize request.
+struct CopyExtension {
+}
+
+impl Extension for CopyExtension {
+    fn access_token(&mut self) -> Option<&mut dyn AccessTokenExtension> {
+        Some(self)
+    }
+}
+
+impl AccessTokenExtension for CopyExtension {
     fn extend(
         &mut self,
         _request: &dyn oxide_auth::code_grant::accesstoken::Request,
-        _data: oxide_auth::primitives::grant::Extensions,
+        data: oxide_auth::primitives::grant::Extensions,
     ) -> std::result::Result<oxide_auth::primitives::grant::Extensions, ()> {
-        let mut extensions = Extensions::new();
-        for (n, v) in &self.headers {
-            extensions.set_raw(n.to_string(), Value::Public(Some(v.to_string())));
-        }
-        Ok(extensions)
+        Ok(data)
     }
 }
 
@@ -78,30 +80,23 @@ pub async fn authorize(
             None => OwnerConsent::Authorized(settings.mapping.default_sub.clone()),
         },
     ));
-    // Add all filtered headers to map
-    // TODO: allow to configure the filter criterion
-    let headers: HashMap<_, _> = if let Some(include_header) =
-        &state.settings.mapping.include_header
-    {
-        let header_pattern = Regex::new(&include_header)
-        .map_err(|e| {
-            error!("Could not compile regular expression for \"mapping.include_headers\" parameter in configuration: {}", e); 
-            WebError::InternalError(None)
-        })?;
-        http_req
-            .headers()
-            .iter()
-            .filter(|(name, _)| header_pattern.is_match(name.as_str()))
-            .map(|(name, value)| {
-                (
+    // Add all configured headers to map
+    let headers: HashMap<_, _> = state
+        .settings
+        .mapping
+        .include_headers
+        .iter()
+        .filter_map(|name| {
+            if let Some(value) = http_req.headers().get(name) {
+                Some((
                     name.to_string(),
                     value.to_str().unwrap_or_default().to_string(),
-                )
-            })
-            .collect()
-    } else {
-        HashMap::new()
-    };
+                ))
+            } else {
+                None
+            }
+        })
+        .collect();
     let extension = HeaderExtension { headers };
     let extended = Extended::extend_with(endpoint, extension);
 
@@ -115,7 +110,12 @@ pub async fn token(
 ) -> Result<OAuthResponse, WebError> {
     let endpoint = state.endpoint();
 
-    AccessTokenFlow::prepare(endpoint)?
+    // Just copy the extensions from the authorize request in our token
+    let extension = CopyExtension {};
+
+    let extended = Extended::extend_with(endpoint, extension);
+
+    AccessTokenFlow::prepare(extended)?
         .execute(auth_request)
         .map_err(WebError::from)
 }
