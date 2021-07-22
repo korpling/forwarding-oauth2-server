@@ -1,10 +1,6 @@
 use std::collections::HashMap;
 
-use actix_web::{
-    dev::HttpResponseBuilder,
-    http::{header::ContentType, StatusCode},
-    web, HttpRequest, HttpResponse,
-};
+use actix_web::{dev::HttpResponseBuilder, http::StatusCode, web, HttpRequest, HttpResponse};
 use log::{debug, error};
 use oxide_auth::{
     endpoint::{
