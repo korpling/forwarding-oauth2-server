@@ -38,8 +38,7 @@ impl AuthorizationExtension for HeaderExtension {
 }
 
 /// An AccessTokenExtension that just copies all extensions from the authorize request.
-struct CopyExtension {
-}
+struct CopyExtension {}
 
 impl Extension for CopyExtension {
     fn access_token(&mut self) -> Option<&mut dyn AccessTokenExtension> {
