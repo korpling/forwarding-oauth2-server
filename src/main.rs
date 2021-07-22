@@ -103,6 +103,7 @@ pub async fn main() -> std::io::Result<()> {
             )
             .route("/token", web::post().to(api::token))
             .route("/refresh", web::post().to(api::refresh))
+            .route("/userinfo", web::get().to(api::userinfo))
     })
     .bind(format!("{}:{}", settings.bind.host, settings.bind.port))
     .expect("Failed to bind to socket");

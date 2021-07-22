@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use actix_web::{web, HttpRequest};
+use actix_web::{web, HttpRequest, HttpResponse};
+use log::{debug, error};
 use oxide_auth::{
     endpoint::{
         AccessTokenExtension, AccessTokenFlow, AuthorizationExtension, AuthorizationFlow,
@@ -11,7 +12,7 @@ use oxide_auth::{
 };
 use oxide_auth_actix::{OAuthRequest, OAuthResponse, WebError};
 
-use crate::state::State;
+use crate::{settings::Settings, state::State};
 
 struct HeaderExtension {
     headers: HashMap<String, String>,
@@ -126,6 +127,54 @@ pub async fn refresh(
     RefreshFlow::prepare(endpoint)?
         .execute(auth_request)
         .map_err(WebError::from)
+}
+
+fn verify_token(token: &str, settings: &Settings) -> Result<serde_json::Value, WebError> {
+    let key = settings
+        .client
+        .token_verification
+        .create_decoding_key()
+        .map_err(|e| {
+            error!("Could not create decoding key to verify token: {}", e);
+            WebError::InternalError(Some(
+                "Could not verify token due to internal error".to_string(),
+            ))
+        })?;
+
+    let validation =
+        jsonwebtoken::Validation::new(settings.client.token_verification.as_algorithm());
+
+    match jsonwebtoken::decode::<serde_json::Value>(token, &key, &validation) {
+        Ok(token) => Ok(token.claims),
+        Err(err) => {
+            debug!("{}", err);
+            Err(WebError::Authorization)
+        }
+    }
+}
+
+pub async fn userinfo((req, state): (HttpRequest, web::Data<State>)) -> Result<HttpResponse, ()> {
+    // Extract the Authorization header with the bearer token
+    if let Some(auth_header) = req.headers().get("Authorization") {
+        // Parse header
+        if let Ok(auth_header) = auth_header.to_str() {
+            if auth_header.starts_with("bearer") || auth_header.starts_with("Bearer") {
+                // Parse and verify token
+                let token = auth_header[6..auth_header.len()].trim();
+                return match verify_token(token, &state.settings) {
+                    // Use the verified claim
+                    Ok(claim) => Ok(HttpResponse::Ok().body(claim.to_string()).into()),
+                    // If a token was given but invalid, report an error
+                    Err(e) => {
+                        debug!("Invalid request to userinfo endpoint: {}", e);
+                        Ok(HttpResponse::Forbidden().into())
+                    }
+                };
+            }
+        }
+    }
+
+    Ok(HttpResponse::Unauthorized().into())
 }
 
 #[cfg(test)]

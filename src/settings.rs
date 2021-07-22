@@ -2,7 +2,7 @@ use std::io::Write;
 use std::ops::Deref;
 use tempfile::NamedTempFile;
 
-use jsonwebtoken::EncodingKey;
+use jsonwebtoken::{DecodingKey, EncodingKey};
 use serde::{Deserialize, Serialize};
 
 use crate::errors::{RuntimeError, StartupError};
@@ -50,8 +50,13 @@ impl Default for Bind {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
 pub enum JWTVerification {
-    HS256 { secret: String },
-    RS256 { private_key: String },
+    HS256 {
+        secret: String,
+    },
+    RS256 {
+        private_key: String,
+        public_key: String,
+    },
 }
 
 impl JWTVerification {
@@ -62,6 +67,18 @@ impl JWTVerification {
             }
             JWTVerification::RS256 { private_key, .. } => {
                 jsonwebtoken::EncodingKey::from_rsa_pem(private_key.as_bytes())?
+            }
+        };
+        Ok(key)
+    }
+
+    pub fn create_decoding_key(&self) -> Result<DecodingKey, RuntimeError> {
+        let key = match &self {
+            JWTVerification::HS256 { secret } => {
+                jsonwebtoken::DecodingKey::from_secret(secret.as_bytes())
+            }
+            JWTVerification::RS256 { public_key, .. } => {
+                jsonwebtoken::DecodingKey::from_rsa_pem(public_key.as_bytes())?
             }
         };
         Ok(key)
