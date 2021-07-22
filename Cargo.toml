@@ -22,7 +22,6 @@ tempfile = "3.2"
 toml = "0.5"
 handlebars = "4"
 serde_json = "1"
-regex = "1"
 
 [dev-dependencies]
 actix-rt = "2"

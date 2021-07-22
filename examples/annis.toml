@@ -1,5 +1,5 @@
 [mapping]
-include_header = "x-.*"
+include_headers = ["x-admin"]
 token_template = "examples/annis-token-template.json"
 default_sub = "academic"
 

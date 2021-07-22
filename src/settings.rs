@@ -10,7 +10,7 @@ use crate::errors::{RuntimeError, StartupError};
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Mapping {
     pub token_template: Option<String>,
-    pub include_header: Option<String>,
+    pub include_headers: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sub_header: Option<String>,
     pub default_sub: String,
@@ -20,7 +20,7 @@ impl Default for Mapping {
     fn default() -> Self {
         Mapping {
             token_template: None,
-            include_header: None,
+            include_headers: vec![],
             sub_header: None,
             default_sub: "user".to_string(),
         }
