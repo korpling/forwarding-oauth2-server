@@ -12,7 +12,9 @@ use actix_web::{
 use chrono::{Duration, Utc};
 use jsonwebtoken::{TokenData, Validation};
 use oxide_auth::code_grant::accesstoken::TokenResponse;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::io::Write;
+use tempfile::NamedTempFile;
 use url::Url;
 
 #[derive(Serialize)]
@@ -154,23 +156,37 @@ async fn test_full_flow() {
     assert_eq!(Some("default-scope".to_string()), response.scope);
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClaimsWithHeader {
+    sub: String,
+    exp: i64,
+    boilerplate: String,
+    admin: String,
+}
+
 #[actix_rt::test]
-async fn test_retrieve_token_with_header_sub() {
+async fn test_retrieve_token_with_headers() {
     let mut settings = Settings::default();
     settings.mapping.sub_header = Some("X-Remote-User".to_string());
+    settings.mapping.include_headers = vec!["X-Boilerplate".to_owned(), "meta-admin".to_owned()];
+
+    let mut file = NamedTempFile::new().unwrap();
+    writeln!(file, "{}", include_str!("template-with-header.json")).unwrap();
+
+    settings.mapping.token_template = Some(file.path().to_string_lossy().to_string());
     let state = init_app(&settings).unwrap();
     let mut app = test::init_service(
         App::new()
             .data(state)
             .route("/authorize", web::get().to(authorize))
-            .route("/token", web::post().to(token))
-            .route("/refresh", web::post().to(refresh)),
+            .route("/token", web::post().to(token)),
     )
     .await;
 
     let req = test::TestRequest::get().uri(
             "/authorize?response_type=code&client_id=default&redirect_uri=http%3A%2F%2Flocalhost%3A8080&scope=default-scope")
-            .header("X-Remote-User", "testuser@example.com").to_request();
+            .header("X-Remote-User", "testuser@example.com")
+            .header("X-Boilerplate", "something").header("meta-admin", "true").to_request();
     let resp = test::call_service(&mut app, req).await;
 
     assert_eq!(resp.status(), 302);
@@ -212,9 +228,12 @@ async fn test_retrieve_token_with_header_sub() {
         .token_verification
         .create_decoding_key()
         .unwrap();
-    let access_token: TokenData<Claims> =
+    let access_token: TokenData<ClaimsWithHeader> =
         jsonwebtoken::decode(&access_token, &decoding, &Validation::default()).unwrap();
     assert_eq!("testuser@example.com", access_token.claims.sub);
+
+    assert_eq!("something", access_token.claims.boilerplate);
+    assert_eq!("true", access_token.claims.admin);
 
     assert!(response.refresh_token.is_some());
     assert_eq!(Some("bearer".to_string()), response.token_type);

@@ -1,0 +1,6 @@
+{
+    "sub": "{{sub}}",
+    "exp": {{exp}},
+    "boilerplate": "{{X-Boilerplate}}",
+    "admin": "{{meta-admin}}"
+}
