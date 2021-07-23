@@ -97,7 +97,7 @@ async fn test_full_flow() {
     let expires_in = response.expires_in.unwrap();
     assert!(expires_in > 0);
     let expires_utc = Utc::now() + Duration::seconds(expires_in);
-    let time_diff =  access_token.claims.exp.unwrap() - expires_utc.timestamp();
+    let time_diff = access_token.claims.exp.unwrap() - expires_utc.timestamp();
     // Should be the same +/- 5 seconds
     assert!(time_diff.abs() < 5);
 
