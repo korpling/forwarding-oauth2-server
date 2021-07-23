@@ -40,7 +40,8 @@ async fn test_full_flow() {
             .data(state)
             .route("/authorize", web::get().to(authorize))
             .route("/token", web::post().to(token))
-            .route("/refresh", web::post().to(refresh)),
+            .route("/refresh", web::post().to(refresh))
+            .route("/userinfo", web::get().to(userinfo)),
     )
     .await;
 
@@ -80,14 +81,14 @@ async fn test_full_flow() {
     let response: TokenResponse = serde_json::from_slice(body.bytes()).unwrap();
 
     assert!(response.access_token.is_some());
-    let access_token = response.access_token.unwrap();
+    let access_token_string = response.access_token.unwrap();
     let decoding = settings
         .client
         .token_verification
         .create_decoding_key()
         .unwrap();
     let access_token: TokenData<Claims> =
-        jsonwebtoken::decode(&access_token, &decoding, &Validation::default()).unwrap();
+        jsonwebtoken::decode(&access_token_string, &decoding, &Validation::default()).unwrap();
     assert_eq!(settings.mapping.default_sub, access_token.claims.sub);
 
     assert!(response.refresh_token.is_some());
@@ -102,6 +103,14 @@ async fn test_full_flow() {
     assert!(time_diff.abs() < 5);
 
     assert_eq!(Some("default-scope".to_string()), response.scope);
+
+    // Validate token using userinfo endpoint
+    let req = test::TestRequest::get()
+        .uri("/userinfo")
+        .header("Authorization", format!("Bearer {}", &access_token_string))
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert_eq!(200, resp.status());
 
     // Refresh the token with the actual token
     let params = RefreshTokenParams {
@@ -122,10 +131,26 @@ async fn test_full_flow() {
     let response: TokenResponse = serde_json::from_slice(body.bytes()).unwrap();
 
     assert!(response.access_token.is_some());
+    let access_token: TokenData<Claims> = jsonwebtoken::decode(
+        &response.access_token.unwrap(),
+        &decoding,
+        &Validation::default(),
+    )
+    .unwrap();
+    assert_eq!(settings.mapping.default_sub, access_token.claims.sub);
+
     assert!(response.refresh_token.is_some());
     assert_eq!(Some("bearer".to_string()), response.token_type);
-    // TODO: when we use JWT token, the expiration must be in sync
+
+    // when we use JWT token, the expiration must be in sync
     assert_eq!(true, response.expires_in.is_some());
+    let expires_in = response.expires_in.unwrap();
+    assert!(expires_in > 0);
+    let expires_utc = Utc::now() + Duration::seconds(expires_in);
+    let time_diff = access_token.claims.exp.unwrap() - expires_utc.timestamp();
+    // Should be the same +/- 5 seconds
+    assert!(time_diff.abs() < 5);
+
     assert_eq!(Some("default-scope".to_string()), response.scope);
 }
 
@@ -139,8 +164,7 @@ async fn test_retrieve_token_with_header_sub() {
             .data(state)
             .route("/authorize", web::get().to(authorize))
             .route("/token", web::post().to(token))
-            .route("/refresh", web::post().to(refresh))
-            .route("/userinfo", web::get().to(userinfo)),
+            .route("/refresh", web::post().to(refresh)),
     )
     .await;
 
@@ -255,6 +279,39 @@ async fn test_invalid_token_code() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert_eq!(resp.status(), 400);
+}
+
+#[actix_rt::test]
+async fn test_invalid_userinfo() {
+    let state = init_app(&Settings::default()).unwrap();
+
+    let mut app = test::init_service(
+        App::new()
+            .data(state)
+            .route("/userinfo", web::get().to(userinfo)),
+    )
+    .await;
+
+    // Test without header
+    let req = test::TestRequest::get().uri("/userinfo").to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert_eq!(401, resp.status());
+
+    // Test with empty string
+    let req = test::TestRequest::get()
+        .uri("/userinfo")
+        .header("Authorization", "Bearer ")
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert_eq!(403, resp.status());
+
+    // Test with claims signed with an invalid secret
+    let req = test::TestRequest::get()
+        .uri("/userinfo")
+        .header("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2MjcwNDI0NTcsImlhdCI6MTYyNzA0MDY1N30.4HWAx0mlPdqkvgpVVQ5i_3dHbownxyeywSjS7dBldjM")
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert_eq!(403, resp.status());
 }
 
 #[actix_rt::test]
