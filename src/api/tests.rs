@@ -17,7 +17,8 @@ use url::Url;
 struct TokenParams {
     grant_type: String,
     code: String,
-    client_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_id: Option<String>,
     redirect_uri: String,
 }
 
@@ -43,7 +44,7 @@ async fn test_retrieve_token_with_header_sub() {
     .await;
 
     let req = test::TestRequest::get().uri(
-            "/authorize?response_type=code&client_id=default&redirect_uri=http%3A%2F%2Flocalhost%3A8080&scope=default-scope&state=23235253")
+            "/authorize?response_type=code&client_id=default&redirect_uri=http%3A%2F%2Flocalhost%3A8080&scope=default-scope")
             .header("X-Remote-User", "testuser@example.com").to_request();
     let resp = test::call_service(&mut app, req).await;
 
@@ -64,7 +65,7 @@ async fn test_retrieve_token_with_header_sub() {
     let params = TokenParams {
         grant_type: "authorization_code".to_string(),
         code: code.to_string(),
-        client_id: "default".to_string(),
+        client_id: Some("default".to_string()),
         redirect_uri: "http://localhost:8080".to_string(),
     };
     let req = test::TestRequest::post()
@@ -137,7 +138,7 @@ async fn test_retrieve_token_without_header_sub() {
     .await;
 
     let req = test::TestRequest::get().uri(
-            "/authorize?response_type=code&client_id=default&redirect_uri=http%3A%2F%2Flocalhost%3A8080&scope=default-scope&state=23235253").to_request();
+            "/authorize?response_type=code&client_id=default&redirect_uri=http%3A%2F%2Flocalhost%3A8080&scope=default-scope").to_request();
     let resp = test::call_service(&mut app, req).await;
 
     assert_eq!(resp.status(), 302);
@@ -157,7 +158,7 @@ async fn test_retrieve_token_without_header_sub() {
     let params = TokenParams {
         grant_type: "authorization_code".to_string(),
         code: code.to_string(),
-        client_id: "default".to_string(),
+        client_id: Some("default".to_string()),
         redirect_uri: "http://localhost:8080".to_string(),
     };
     let req = test::TestRequest::post()
@@ -273,3 +274,83 @@ async fn test_authorize_no_header() {
     let location = resp.headers().get("location").unwrap().to_str().unwrap();
     assert_eq!(location, "http://localhost:8080/?error=access_denied");
 }
+
+#[actix_rt::test]
+async fn test_check_confidential_client() {
+    let mut settings = Settings::default();
+    settings.client.secret = Some("abc".to_string());
+    let state = init_app(&settings).unwrap();
+
+    let mut app = test::init_service(
+        App::new()
+            .data(state)
+            .route("/authorize", web::get().to(authorize))
+            .route("/token", web::post().to(token))
+    )
+    .await;
+
+    let req = test::TestRequest::get().uri(
+            "/authorize?response_type=code&client_id=default&redirect_uri=http%3A%2F%2Flocalhost%3A8080&scope=default-scope").to_request();
+    let resp = test::call_service(&mut app, req).await;
+
+    assert_eq!(resp.status(), 302);
+    assert!(resp.headers().get("location").is_some());
+    let location = resp.headers().get("location").unwrap().to_str().unwrap();
+
+    // Parse result and extract the code we need to get the actual token
+    let location = Url::parse(location).unwrap();
+    let params: HashMap<String, String> = location
+        .query_pairs()
+        .map(|(n, v)| (n.to_string(), v.to_string()))
+        .collect();
+
+    let code = params.get("code").unwrap();
+
+    // Use the code to request a token
+    let mut params = TokenParams {
+        grant_type: "authorization_code".to_string(),
+        code: code.to_string(),
+        client_id: Some("default".to_string()),
+        redirect_uri: "http://localhost:8080".to_string(),
+    };
+    let req = test::TestRequest::post()
+        .uri("/token")
+        .set_form(&params)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+
+    // The client secret is missing and thus we should not get a token
+    assert_eq!(resp.status(), 401);
+
+    // Test again, but do neither provide a client id nor a secret
+    params.client_id = None;
+let req = test::TestRequest::post()
+        .uri("/token")
+        .set_form(&params)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+
+    assert_eq!(resp.status(), 400);
+
+
+    // Test with incorrect passphrase
+    let req = test::TestRequest::post()
+        .uri("/token")
+        .header("Authorization", "Basic ZGVmYXVsdDpkZWYgLW4K")
+        .set_form(&params)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+
+    assert_eq!(resp.status(), 401);
+
+    // Test again and provide the correct passphrase as HTTP Basic Auth header
+    let req = test::TestRequest::post()
+        .uri("/token")
+        .header("Authorization", "Basic ZGVmYXVsdDphYmM=")
+        .set_form(&params)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+
+    assert_eq!(resp.status(), 200);
+}
+

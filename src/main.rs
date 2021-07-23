@@ -12,7 +12,7 @@ use actix_web::{
 };
 use clap::Arg;
 use errors::StartupError;
-use log::{info, warn, LevelFilter};
+use log::{warn, LevelFilter};
 use simplelog::{ColorChoice, Config, SimpleLogger, TermLogger, TerminalMode};
 
 use crate::{settings::Settings, state::State};
@@ -44,8 +44,6 @@ fn init_app(settings: &Settings) -> std::result::Result<State, StartupError> {
             println!("Simple logging failed too: {}", e_simple);
         }
     }
-
-    info!("Logging with level {}", log_filter);
 
     let state = State::new(&settings)?;
     Ok(state)
