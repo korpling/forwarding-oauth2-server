@@ -5,6 +5,7 @@ use crate::jwt::JWTIssuer;
 use crate::settings::Settings;
 use oxide_auth::frontends::simple::endpoint::{Generic, Vacant};
 use oxide_auth::primitives::prelude::*;
+use oxide_auth::primitives::registrar::RegisteredUrl;
 
 pub struct State {
     registrar: Mutex<ClientMap>,
@@ -26,6 +27,13 @@ impl State {
     }
 
     pub fn new(settings: &Settings) -> Result<Self, StartupError> {
+        let additional_redirect_uris: Vec<_> = settings
+            .client
+            .additional_redirect_uris
+            .iter()
+            .filter_map(|u| u.parse::<url::Url>().ok())
+            .map(|u| RegisteredUrl::Semantic(u))
+            .collect();
         let client = if let Some(client_secret) = &settings.client.secret {
             Client::confidential(
                 &settings.client.id,
@@ -33,12 +41,14 @@ impl State {
                 "default-scope".parse()?,
                 client_secret.as_bytes(),
             )
+            .with_additional_redirect_uris(additional_redirect_uris)
         } else {
             Client::public(
                 &settings.client.id,
                 settings.client.redirect_uri.parse::<url::Url>()?.into(),
                 "default-scope".parse()?,
             )
+            .with_additional_redirect_uris(additional_redirect_uris)
         };
         let registrar = vec![client].into_iter().collect();
         let authorizer = AuthMap::new(RandomGenerator::new(16));

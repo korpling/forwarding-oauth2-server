@@ -104,6 +104,7 @@ impl Default for JWTVerification {
 pub struct Client {
     pub id: String,
     pub redirect_uri: String,
+    pub additional_redirect_uris: Vec<String>,
     pub secret: Option<String>,
     pub token_verification: JWTVerification,
 }
@@ -113,6 +114,7 @@ impl Default for Client {
         Client {
             id: "default".to_string(),
             redirect_uri: "http://localhost:8080".to_string(),
+            additional_redirect_uris: Vec::default(),
             secret: None,
             token_verification: JWTVerification::default(),
         }
