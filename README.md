@@ -110,7 +110,7 @@ JWT tokens are created using a template file, which is given as `token_template`
 We use the template language [Handlebars](https://handlebarsjs.com/) for including dynamic content like the user name (given as `sub` variable).
 Also, all forwarded headers which are defined in the `include_header` field of the configuration variable can be used inside the JWT token definition.
 
-```json
+```
 {
     "sub": "{{sub}}",
     "exp": {{exp}},
