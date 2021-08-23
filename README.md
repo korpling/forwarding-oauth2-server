@@ -146,3 +146,7 @@ spring.security.oauth2.client.provider.shib.user-info-urihttps://yourserver/logi
 spring.security.oauth2.client.provider.shib.user-name-attribute=sub
 
 ```
+
+## 3rd party dependencies
+
+This software depends on several 3rd party libraries. These are documented in the "third-party-licenses.html" file in this folder.
