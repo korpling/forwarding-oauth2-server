@@ -1,2 +1,2 @@
-cargo test
-cargo about generate about.hbs > third-party-licenses.html
+#cargo test
+cargo about generate scripts/about.hbs > third-party-licenses.html
