@@ -1,3 +1,6 @@
+[bind]
+port = 8020
+
 [mapping]
 include_headers = ["x-admin"]
 token_template = "examples/annis-token-template.json"
