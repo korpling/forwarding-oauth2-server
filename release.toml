@@ -2,4 +2,4 @@ sign-commit = true
 sign-tag = true
 dev-version-ext = "dev"
 no-dev-version = true
-pre-release-hook = ["pre_release.sh"]
+pre-release-hook = ["scripts/pre_release.sh"]
