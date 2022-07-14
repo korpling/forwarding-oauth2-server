@@ -9,3 +9,8 @@ accepted = [
     "Zlib",
     "OpenSSL",
 ]
+
+workarounds = [
+  "ring",
+]
+
