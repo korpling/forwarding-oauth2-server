@@ -10,7 +10,7 @@ use actix_web::{
     middleware::{Logger, NormalizePath, TrailingSlash},
     web, App, HttpServer,
 };
-use clap::Arg;
+use clap::{Arg, ArgSettings};
 use errors::StartupError;
 use log::{warn, LevelFilter};
 use simplelog::{ColorChoice, Config, SimpleLogger, TermLogger, TerminalMode};
@@ -63,9 +63,10 @@ where
         .about("OAuth2 server for wrapping Shibboleth IdPs")
         .arg(
             Arg::with_name("config")
-                .short("c")
+                .short('c')
                 .long("config")
                 .help("Configuration file location")
+                .setting(ArgSettings::AllowInvalidUtf8)
                 .takes_value(true),
         )
         .get_matches_from(args);

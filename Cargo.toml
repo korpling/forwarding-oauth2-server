@@ -13,7 +13,7 @@ Shibboleth/SAML meta data fields that are passed through as HTTP headers (like X
 
 [dependencies]
 actix-web = "4"
-clap = "2"
+clap = "3"
 config = "0.11"
 handlebars = "4"
 jsonwebtoken = "8.1"
