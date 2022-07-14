@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Updated actix-web dependency to version 4
+- Updated `actix-web` dependency to the new major version 4
+- Updated `jsonwebtoken` and `simplelog` to their newest version
 
 ## [0.1.0]
 
