@@ -12,5 +12,5 @@ license: "Apache-2.0"
 message: "If you use this software, please cite it using these metadata."
 repository-code: "https://github.com/korpling/shibboleth-oauth2-forwarding"
 title: "shibboleth-oauth2-forwarding"
-version: "0.1.0"
+version: 0.1.0
 ...
