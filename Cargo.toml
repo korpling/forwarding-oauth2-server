@@ -4,7 +4,7 @@ edition = "2018"
 license = "Apache-2.0"
 name = "shibboleth-oauth2-forwarding"
 repository = "https://github.com/korpling/shibboleth-oauth2-forwarding"
-version = "0.1.0"
+version = "0.2.0"
 description = """
 This is a server that creates an OAuth2 Server (identity provider). 
 It assumes it runs behind as protected resource (e.g. by securing it with AuthType shibboleth in an Apache 2 server). 
