@@ -30,4 +30,4 @@ url = "2"
 
 [dev-dependencies]
 actix-rt = "2"
-chrono = "0.4"
+time = "0.3"

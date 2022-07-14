@@ -9,12 +9,12 @@ use actix_web::{
     web::{self, Data},
     App,
 };
-use chrono::{Duration, Utc};
 use jsonwebtoken::{TokenData, Validation};
 use oxide_auth::code_grant::accesstoken::TokenResponse;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 use tempfile::NamedTempFile;
+use time::{Duration, OffsetDateTime};
 use url::Url;
 
 #[derive(Serialize)]
@@ -97,10 +97,10 @@ async fn test_full_flow() {
     assert_eq!(Some("bearer".to_string()), response.token_type);
     // when we use JWT token, the expiration must be in sync
     assert_eq!(true, response.expires_in.is_some());
-    let expires_in = response.expires_in.unwrap();
-    assert!(expires_in > 0);
-    let expires_utc = Utc::now() + Duration::seconds(expires_in);
-    let time_diff = access_token.claims.exp.unwrap() - expires_utc.timestamp();
+    let expires_response = response.expires_in.unwrap();
+    assert!(expires_response > 0);
+    let should_expire_in = OffsetDateTime::now_utc() + Duration::seconds(expires_response);
+    let time_diff = access_token.claims.exp.unwrap() - should_expire_in.unix_timestamp();
     // Should be the same +/- 5 seconds
     assert!(time_diff.abs() < 5);
 
@@ -148,8 +148,8 @@ async fn test_full_flow() {
     assert_eq!(true, response.expires_in.is_some());
     let expires_in = response.expires_in.unwrap();
     assert!(expires_in > 0);
-    let expires_utc = Utc::now() + Duration::seconds(expires_in);
-    let time_diff = access_token.claims.exp.unwrap() - expires_utc.timestamp();
+    let expires_utc = OffsetDateTime::now_utc() + Duration::seconds(expires_in);
+    let time_diff = access_token.claims.exp.unwrap() - expires_utc.unix_timestamp();
     // Should be the same +/- 5 seconds
     assert!(time_diff.abs() < 5);
 
