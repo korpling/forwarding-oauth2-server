@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use actix_web::{dev::HttpResponseBuilder, http::StatusCode, web, HttpRequest, HttpResponse};
+use actix_web::{http::StatusCode, web, HttpRequest, HttpResponse, HttpResponseBuilder};
 use log::{debug, error};
 use oxide_auth::{
     endpoint::{
@@ -153,7 +153,9 @@ fn verify_token(token: &str, settings: &Settings) -> Result<serde_json::Value, W
     }
 }
 
-pub async fn userinfo((req, state): (HttpRequest, web::Data<State>)) -> Result<HttpResponse, ()> {
+pub async fn userinfo(
+    (req, state): (HttpRequest, web::Data<State>),
+) -> Result<HttpResponse, WebError> {
     // Extract the Authorization header with the bearer token
     if let Some(auth_header) = req.headers().get("Authorization") {
         // Parse header

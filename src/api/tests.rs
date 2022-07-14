@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use actix_web::{
     test::{self, read_body},
-    web::{self, Buf},
+    web::{self, Data},
     App,
 };
 use chrono::{Duration, Utc};
@@ -39,7 +39,7 @@ async fn test_full_flow() {
     let state = init_app(&settings).unwrap();
     let mut app = test::init_service(
         App::new()
-            .data(state)
+            .app_data(Data::new(state))
             .route("/authorize", web::get().to(authorize))
             .route("/token", web::post().to(token))
             .route("/refresh", web::post().to(refresh))
@@ -80,7 +80,7 @@ async fn test_full_flow() {
     assert_eq!(resp.status(), 200);
 
     let body = read_body(resp).await;
-    let response: TokenResponse = serde_json::from_slice(body.bytes()).unwrap();
+    let response: TokenResponse = serde_json::from_slice(&body).unwrap();
 
     assert!(response.access_token.is_some());
     let access_token_string = response.access_token.unwrap();
@@ -109,7 +109,7 @@ async fn test_full_flow() {
     // Validate token using userinfo endpoint
     let req = test::TestRequest::get()
         .uri("/userinfo")
-        .header("Authorization", format!("Bearer {}", &access_token_string))
+        .append_header(("Authorization", format!("Bearer {}", &access_token_string)))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert_eq!(200, resp.status());
@@ -130,7 +130,7 @@ async fn test_full_flow() {
 
     let body = read_body(resp).await;
 
-    let response: TokenResponse = serde_json::from_slice(body.bytes()).unwrap();
+    let response: TokenResponse = serde_json::from_slice(&body).unwrap();
 
     assert!(response.access_token.is_some());
     let access_token: TokenData<Claims> = jsonwebtoken::decode(
@@ -177,7 +177,7 @@ async fn test_retrieve_token_with_headers() {
     let state = init_app(&settings).unwrap();
     let mut app = test::init_service(
         App::new()
-            .data(state)
+            .app_data(Data::new(state))
             .route("/authorize", web::get().to(authorize))
             .route("/token", web::post().to(token)),
     )
@@ -185,8 +185,8 @@ async fn test_retrieve_token_with_headers() {
 
     let req = test::TestRequest::get().uri(
             "/authorize?response_type=code&client_id=default&redirect_uri=http%3A%2F%2Flocalhost%3A8080&scope=default-scope")
-            .header("X-Remote-User", "testuser@example.com")
-            .header("X-Boilerplate", "something").header("meta-admin", "true").to_request();
+            .append_header(("X-Remote-User", "testuser@example.com"))
+            .append_header(("X-Boilerplate", "something")).append_header(("meta-admin", "true")).to_request();
     let resp = test::call_service(&mut app, req).await;
 
     assert_eq!(resp.status(), 302);
@@ -218,7 +218,7 @@ async fn test_retrieve_token_with_headers() {
     assert_eq!(resp.status(), 200);
 
     let body = read_body(resp).await;
-    let response: TokenResponse = serde_json::from_slice(body.bytes()).unwrap();
+    let response: TokenResponse = serde_json::from_slice(&body).unwrap();
 
     assert!(response.access_token.is_some());
 
@@ -247,7 +247,7 @@ async fn test_invalid_refresh() {
     let state = init_app(&settings).unwrap();
     let mut app = test::init_service(
         App::new()
-            .data(state)
+            .app_data(Data::new(state))
             .route("/refresh", web::post().to(refresh)),
     )
     .await;
@@ -271,7 +271,7 @@ async fn test_invalid_token_code() {
 
     let mut app = test::init_service(
         App::new()
-            .data(state)
+            .app_data(Data::new(state))
             .route("/token", web::post().to(token)),
     )
     .await;
@@ -306,7 +306,7 @@ async fn test_invalid_userinfo() {
 
     let mut app = test::init_service(
         App::new()
-            .data(state)
+            .app_data(Data::new(state))
             .route("/userinfo", web::get().to(userinfo)),
     )
     .await;
@@ -319,7 +319,7 @@ async fn test_invalid_userinfo() {
     // Test with empty string
     let req = test::TestRequest::get()
         .uri("/userinfo")
-        .header("Authorization", "Bearer ")
+        .append_header(("Authorization", "Bearer "))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert_eq!(403, resp.status());
@@ -327,7 +327,7 @@ async fn test_invalid_userinfo() {
     // Test with claims signed with an invalid secret
     let req = test::TestRequest::get()
         .uri("/userinfo")
-        .header("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2MjcwNDI0NTcsImlhdCI6MTYyNzA0MDY1N30.4HWAx0mlPdqkvgpVVQ5i_3dHbownxyeywSjS7dBldjM")
+        .append_header(("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2MjcwNDI0NTcsImlhdCI6MTYyNzA0MDY1N30.4HWAx0mlPdqkvgpVVQ5i_3dHbownxyeywSjS7dBldjM"))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert_eq!(403, resp.status());
@@ -341,7 +341,7 @@ async fn test_authorize_no_header() {
 
     let mut app = test::init_service(
         App::new()
-            .data(state)
+            .app_data(Data::new(state))
             .route("/authorize", web::get().to(authorize)),
     )
     .await;
@@ -363,7 +363,7 @@ async fn test_check_confidential_client() {
 
     let mut app = test::init_service(
         App::new()
-            .data(state)
+            .app_data(Data::new(state))
             .route("/authorize", web::get().to(authorize))
             .route("/token", web::post().to(token)),
     )
@@ -415,7 +415,7 @@ async fn test_check_confidential_client() {
     // Test with incorrect passphrase
     let req = test::TestRequest::post()
         .uri("/token")
-        .header("Authorization", "Basic ZGVmYXVsdDpkZWYgLW4K")
+        .append_header(("Authorization", "Basic ZGVmYXVsdDpkZWYgLW4K"))
         .set_form(&params)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -425,7 +425,7 @@ async fn test_check_confidential_client() {
     // Test again and provide the correct passphrase as HTTP Basic Auth header
     let req = test::TestRequest::post()
         .uri("/token")
-        .header("Authorization", "Basic ZGVmYXVsdDphYmM=")
+        .append_header(("Authorization", "Basic ZGVmYXVsdDphYmM="))
         .set_form(&params)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
