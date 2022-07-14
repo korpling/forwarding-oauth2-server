@@ -1520,7 +1520,6 @@ version = "0.2.0"
 dependencies = [
  "actix-rt",
  "actix-web",
- "chrono",
  "clap",
  "config",
  "handlebars",
@@ -1533,6 +1532,7 @@ dependencies = [
  "simplelog",
  "tempfile",
  "thiserror",
+ "time 0.3.11",
  "toml",
  "url",
 ]
