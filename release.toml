@@ -1,7 +1,6 @@
 sign-commit = true
 sign-tag = true
-dev-version-ext = "dev"
-no-dev-version = true
+dev-version = false
 pre-release-hook = ["scripts/pre_release.sh"]
 tag-name =  "v{{version}}"
 pre-release-replacements = [
