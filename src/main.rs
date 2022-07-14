@@ -7,7 +7,7 @@ mod state;
 use std::ffi::OsString;
 
 use actix_web::{
-    middleware::{normalize::TrailingSlash, Logger, NormalizePath},
+    middleware::{Logger, NormalizePath, TrailingSlash},
     web, App, HttpServer,
 };
 use clap::Arg;
