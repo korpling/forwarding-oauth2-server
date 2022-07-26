@@ -141,7 +141,7 @@ spring.security.oauth2.client.registration.shib.redirect-uri=https://youapplicat
 
 spring.security.oauth2.client.provider.shib.authorization-uri=https://yourserver/login/authorize
 spring.security.oauth2.client.provider.shib.token-uri=https://yourserver/login/authorize/token
-spring.security.oauth2.client.provider.shib.user-info-urihttps://yourserver/login/userinfo
+spring.security.oauth2.client.provider.shib.user-info-uri=https://yourserver/login/userinfo
 spring.security.oauth2.client.provider.shib.user-name-attribute=sub
 
 ```
