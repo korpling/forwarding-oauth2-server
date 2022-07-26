@@ -57,7 +57,7 @@ where
     T: Into<OsString> + Clone,
 {
     // Parse CLI arguments
-    let matches = clap::App::new("shibboleth-oauth2-forwarding")
+    let matches = clap::App::new("forwarding-oauth2-server")
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about("OAuth2 server for wrapping Shibboleth IdPs")

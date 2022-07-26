@@ -39,10 +39,10 @@ This secured location must be forwared to the actual web service we are going to
 ### Installation of the service binary
 
 1. To install this binary as a service you will need a working Rust compiler environment, which can be installed with <https://rustup.rs/>
-2. Compile the binary with `cargo install shibboleth-oauth2-forwarding`,
+2. Compile the binary with `cargo install forwarding-oauth2-server`,
 3. Copy the resulting binary file to you system-wide binary folder
 ```bash
-cp ~/.cargo/bin/shibboleth-oauth2-forwarding /usr/local/bin/
+cp ~/.cargo/bin/forwarding-oauth2-server /usr/local/bin/
 ```
 4. For [systemd](https://wiki.debian.org/systemd/Services) based Linux servers like Ubuntu 18.04, create a service unit definition file with a `.service` suffix in the `/etc/systemd/system` directory. This file could look like following example. Also make sure to choose a user (here `youruser`) this service should run as.
 
@@ -52,7 +52,7 @@ Description=Authorization token wrapper for ANNIS
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/shibboleth-oauth2-forwarding -c /usr/local/etc/shibboleth-oauth2-forwarding.toml
+ExecStart=/usr/local/bin/forwarding-oauth2-server -c /usr/local/etc/forwarding-oauth2-server.toml
 User=youruser
 Group=youruser
 WorkingDirectory=/usr/local/
@@ -71,7 +71,7 @@ For non-systemd-based servers use the operating system manual to define a corres
 
 ### Configuration file
 
-In the previous service definition, the `/usr/local/etc/shibboleth-oauth2-forwarding.toml` file was used as configuration file.
+In the previous service definition, the `/usr/local/etc/forwarding-oauth2-server.toml` file was used as configuration file.
 You can copy one of the example files in the `examples/` folder and adjust them to your needs.
 We use TOML files, which syntax is documented at <https://toml.io/>
 

@@ -2,8 +2,8 @@
 authors = ["Thomas Krause"]
 edition = "2018"
 license = "Apache-2.0"
-name = "shibboleth-oauth2-forwarding"
-repository = "https://github.com/korpling/shibboleth-oauth2-forwarding"
+name = "forwarding-oauth2-server"
+repository = "https://github.com/korpling/forwarding-oauth2-server"
 version = "0.2.0"
 description = """
 This is a server that creates an OAuth2 Server (identity provider). 
