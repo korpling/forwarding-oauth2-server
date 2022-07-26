@@ -1,14 +1,13 @@
-# OAuth2 server for wrapping Shibboleth IdPs
+# OAuth2 server that runs behind a protected resource
 
 This is a server that creates an [OAuth2](https://oauth.net/2/) Server (identity provider).
-It assumes it runs behind as protected resource (e.g. by securing it with `AuthType shibboleth` in an Apache 2 server). 
+It assumes it runs behind as protected resource (e.g. by securing it with `AuthType shibboleth` in an Apache 2 server or using any other [Apache 2 authorization](https://httpd.apache.org/docs/2.4/mod/mod_authz_core.html)). 
 Shibboleth/SAML meta data fields that are passed through as HTTP headers (like `X-Remote-User`) variables can be mapped to [JWT token](https://jwt.io/) attributes.
-
 
 
 ## Background
 
-This project will be used as identity provider for the [ANNIS frontend](https://github.com/korpling/ANNIS) when an institutional Shibboleth identity provider (like the DFN AAI) should be used.
+This project is used as identity provider for the [ANNIS frontend](https://github.com/korpling/ANNIS) when an institutional Shibboleth identity provider (like the DFN AAI) should be used.
 
 ## Installation and configuration
 
