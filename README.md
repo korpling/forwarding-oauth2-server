@@ -1,7 +1,7 @@
 # OAuth2 server that runs behind a protected resource
 
 This is a server that creates an [OAuth2](https://oauth.net/2/) Server (identity provider).
-It assumes it runs behind as protected resource (e.g. by securing it with `AuthType shibboleth` in an Apache 2 server or using any other [Apache 2 authorization](https://httpd.apache.org/docs/2.4/mod/mod_authz_core.html)). 
+It assumes it runs behind as protected resource (e.g. by securing it with `AuthType shibboleth` in an Apache 2 server or by using any other [Apache 2 authorization method](https://httpd.apache.org/docs/2.4/mod/mod_authz_core.html)). 
 Shibboleth/SAML meta data fields that are passed through as HTTP headers (like `X-Remote-User`) variables can be mapped to [JWT token](https://jwt.io/) attributes.
 
 
