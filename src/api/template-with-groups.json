@@ -1,0 +1,6 @@
+{
+    "sub": "{{sub}}",
+    "exp": {{exp}},
+    "groups": [{{#each groups}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}],
+    "roles": [{{#each roles}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}]
+}

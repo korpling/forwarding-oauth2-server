@@ -8,12 +8,20 @@ use serde::{Deserialize, Serialize};
 use crate::errors::{RuntimeError, StartupError};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct User {
+    pub id: String,
+    pub roles: Vec<String>,
+    pub groups: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Mapping {
     pub token_template: Option<String>,
     pub include_headers: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sub_header: Option<String>,
     pub default_sub: String,
+    pub users: Vec<User>,
 }
 
 impl Default for Mapping {
@@ -23,6 +31,7 @@ impl Default for Mapping {
             include_headers: vec![],
             sub_header: None,
             default_sub: "user".to_string(),
+            users: Vec::new(),
         }
     }
 }

@@ -1,5 +1,6 @@
 use std::{borrow::Cow, collections::HashMap};
 
+use handlebars::JsonValue;
 use log::error;
 use oxide_auth::{
     endpoint::Issuer,
@@ -53,18 +54,37 @@ impl JWTIssuer {
                 include_str!("default-token-template.json").into()
             };
 
-        let mut variables: HashMap<String, String> = HashMap::new();
-        variables.insert("sub".to_string(), sub);
-        variables.insert("exp".to_string(), exp.to_string());
+        let mut variables: HashMap<String, JsonValue> = HashMap::new();
+        variables.insert("sub".to_string(), JsonValue::String(sub.clone()));
+        variables.insert("exp".to_string(), JsonValue::String(exp.to_string()));
+        // Get all roles and groups of this user from the configuration
+        let user_settings = self
+            .settings
+            .mapping
+            .users
+            .iter()
+            .filter(|u| u.id == sub)
+            .next();
+        if let Some(user_settings) = user_settings {
+            variables.insert(
+                "groups".to_string(),
+                JsonValue::Array(user_settings.groups.iter().map(|v| JsonValue::String(v.to_string())).collect()),
+            );
+            variables.insert(
+                "roles".to_string(),
+                JsonValue::Array(user_settings.roles.iter().map(|v| JsonValue::String(v.to_string())).collect()),
+            );
+        }
+
         // Add all public extensions as arguments
         for (k, v) in grant.extensions.public() {
             variables
                 .entry(k.to_string())
-                .or_insert(v.unwrap_or_default().to_string());
+                .or_insert(JsonValue::String(v .unwrap_or_default().to_string()));
         }
 
         let unsigned_token_raw = hb.render_template(&token_template, &variables)?;
-
+        
         // Parse JSON so encoding it with serde later on will produce a correct value
         let unsigned_token: Map<String, serde_json::Value> =
             serde_json::from_str(&unsigned_token_raw)?;
