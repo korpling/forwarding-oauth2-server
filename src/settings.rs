@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{io::Write, collections::HashMap};
 use std::ops::Deref;
 use tempfile::NamedTempFile;
 
@@ -9,7 +9,6 @@ use crate::errors::{RuntimeError, StartupError};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct User {
-    pub id: String,
     pub roles: Vec<String>,
     pub groups: Vec<String>,
 }
@@ -21,7 +20,7 @@ pub struct Mapping {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sub_header: Option<String>,
     pub default_sub: String,
-    pub users: Vec<User>,
+    pub users: HashMap<String, User>,
 }
 
 impl Default for Mapping {
@@ -31,7 +30,7 @@ impl Default for Mapping {
             include_headers: vec![],
             sub_header: None,
             default_sub: "user".to_string(),
-            users: Vec::new(),
+            users: HashMap::new(),
         }
     }
 }

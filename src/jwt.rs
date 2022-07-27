@@ -61,10 +61,7 @@ impl JWTIssuer {
         let user_settings = self
             .settings
             .mapping
-            .users
-            .iter()
-            .filter(|u| u.id == sub)
-            .next();
+            .users.get(&sub);
         if let Some(user_settings) = user_settings {
             variables.insert(
                 "groups".to_string(),

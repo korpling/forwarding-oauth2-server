@@ -259,7 +259,6 @@ async fn test_retrieve_token_with_groups() {
     settings.mapping.sub_header = Some("X-Remote-User".to_string());
 
     let u = User {
-        id: "testuser@example.com".to_string(),
         groups: vec![
             "public".to_string(),
             "academic".to_string(),
@@ -267,7 +266,7 @@ async fn test_retrieve_token_with_groups() {
         ],
         roles: vec!["administrator".to_string()],
     };
-    settings.mapping.users.push(u);
+    settings.mapping.users.insert("testuser@example.com".to_string(), u);
 
     let mut file = NamedTempFile::new().unwrap();
     writeln!(file, "{}", include_str!("template-with-groups.json")).unwrap();
